@@ -9,7 +9,7 @@ on:
       - main
 
 env:
-  HOSTING_DIR: /home/ec2-user/tripplanner-backend/itinerary
+  HOSTING_DIR: /home/ec2-user/tripplanner-backend/videoanalysis
 
 jobs:
   deploy:

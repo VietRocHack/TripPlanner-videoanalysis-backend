@@ -14,7 +14,7 @@ model = "gpt-3.5-turbo"
 def index():
     return jsonify("Hello world")
 
-@app.route("/generate_itinerary", methods=['GET'])
+@app.route("/analyze_videos", methods=['GET'])
 def generate_itinerary():
     user_prompt = request.args.get("prompt")
     
@@ -31,10 +31,6 @@ def generate_itinerary():
     )
 
     return completion.choices[0].message.content
-
-def save_to_database():
-    # TODO: save the generated prompt in a database
-    return ""
 
 if __name__ == "__main__":
     app.run(port=8000)

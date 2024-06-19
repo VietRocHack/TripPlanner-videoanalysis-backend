@@ -1,0 +1,13 @@
+[Unit]
+Description=Gunicorn instance for TripPlanner itinerary backend, development server
+After=network.target
+
+[Service]
+User=ec2-user
+Group=nobody
+WorkingDirectory=/home/ec2-user/tripplanner-backend/itinerary/dev
+ExecStart=/home/ec2-user/tripplanner-backend/itinerary/dev/venv/bin/gunicorn -b 0.0.0.0:8001 wsgi:app
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

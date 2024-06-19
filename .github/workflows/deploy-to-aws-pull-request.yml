@@ -1,0 +1,76 @@
+name: Deploy Flask App to EC2
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+env:
+  HOSTING_DIR: /home/ec2-user/tripplanner-backend/itinerary
+
+jobs:
+  deploy:
+    runs-on: self-hosted  # Specify that the job runs on a self-hosted runner
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set environment for merge to main branch
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      run: echo "STAGE=prod" >> $GITHUB_ENV
+
+    - name: Set environment for pull request
+      if: github.event_name == 'pull_request'
+      run: echo "STAGE=dev" >> $GITHUB_ENV
+
+    - name: Set environment for service name
+      run: echo "SERVICE_NAME=tripplanner-itinerary-${STAGE}" >> $GITHUB_ENV
+
+    - name: Set up Python
+      uses: kishaningithub/setup-python-amazon-linux@v1 # Github does not support setup-python on anything other than #Ubuntu
+      with:
+        python-version: '3.10'  # Specify the Python version you need
+
+    - name: Install pip
+      run: python -m pip install --upgrade pip
+
+    - name: Clean hosting folder
+      run: |
+        rm -rf $HOSTING_DIR/$STAGE
+        mkdir -p $HOSTING_DIR/$STAGE
+
+    - name: Move files to hosting folder and service files to /etc/systemd/system
+      run: |
+        cp -r ./* $HOSTING_DIR/$STAGE
+        sudo rm -f /etc/systemd/system/$SERVICE_NAME.service
+        sudo cp .github/workflows/$SERVICE_NAME.service /etc/systemd/system/
+
+    - name: Create virtual env and install requirements in hosting folder
+      run: |
+        cd $HOSTING_DIR/$STAGE
+        python -m venv venv
+        source venv/bin/activate
+        pip install -r requirements.txt
+        pip install gunicorn
+
+    - name: Copy settings file to host
+      run: cp $HOSTING_DIR/settings.py $HOSTING_DIR/$STAGE/
+    
+    - name: Reload/start WSGI service
+      run: |
+        sudo systemctl daemon-reload
+        sudo systemctl start $SERVICE_NAME
+        sudo systemctl enable $SERVICE_NAME
+
+    - name: Verify service is running
+      run: |
+          sleep 5
+          systemctl status $SERVICE_NAME | grep "Active:"
+          if ! systemctl status $SERVICE_NAME | grep "active (running)"; then
+            systemctl status $SERVICE_NAME
+            echo "::error::Itinerary backend service encounters an error, check systemctl log to see what went wrong"
+            exit 1
+          fi

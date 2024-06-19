@@ -1,0 +1,5 @@
+Create an one-day travel plan
+ - Location: Rochester, NY
+ - Start time: 7:00
+ - End time: 17:00
+ - Activities: Visit attractions and museums

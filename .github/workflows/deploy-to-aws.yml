@@ -30,7 +30,7 @@ jobs:
     - name: Set environment for service name and hosting folder
       run: |
         echo "SERVICE_NAME=tripplanner-${BACKEND}-${STAGE}" >> $GITHUB_ENV
-        echo "HOSTING_DIR=${HOSTING}/${BACKEND}"
+        echo "HOSTING_DIR=${HOSTING}/${BACKEND}" >> $GITHUB_ENV
 
     - name: Set up Python
       uses: kishaningithub/setup-python-amazon-linux@v1 # Github does not support setup-python on anything other than #Ubuntu

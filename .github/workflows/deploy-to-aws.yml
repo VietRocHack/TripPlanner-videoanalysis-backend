@@ -9,7 +9,8 @@ on:
       - main
 
 env:
-  HOSTING_DIR: /home/ec2-user/tripplanner-backend/videoanalysis
+  BACKEND: videoanalysis
+  HOSTING_DIR: /home/ec2-user/tripplanner-backend/$BACKEND
 
 jobs:
   deploy:
@@ -27,7 +28,7 @@ jobs:
       run: echo "STAGE=dev" >> $GITHUB_ENV
 
     - name: Set environment for service name
-      run: echo "SERVICE_NAME=tripplanner-itinerary-${STAGE}" >> $GITHUB_ENV
+      run: echo "SERVICE_NAME=tripplanner-${BACKEND}-${STAGE}" >> $GITHUB_ENV
 
     - name: Set up Python
       uses: kishaningithub/setup-python-amazon-linux@v1 # Github does not support setup-python on anything other than #Ubuntu

@@ -4,7 +4,6 @@ from app import app
 class HttpTest(unittest.TestCase):
 		def setUp(self):
 				self.app = app.test_client()
-				print("app", self.app)
 				self.app.testing = True
 
 		def test_hello_world(self):

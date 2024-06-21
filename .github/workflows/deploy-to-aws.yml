@@ -62,6 +62,9 @@ jobs:
     - name: Copy settings file to host
       run: cp $HOSTING_DIR/settings.py $HOSTING_DIR/$STAGE/
     
+    - name: Run unit tests
+      run: python -m unittest
+
     - name: Reload/start WSGI service
       run: |
         sudo systemctl daemon-reload

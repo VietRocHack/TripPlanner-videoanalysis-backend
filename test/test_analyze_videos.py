@@ -7,7 +7,8 @@ class AnalyzeVideoUnitTest(unittest.TestCase):
 		result, content = analyze_videos.analyze(video)
 
 		self.assertEqual(result, True)
-		self.assertGreater(len(content), 0)
+		self.assertTrue("video" in content)
+		self.assertTrue("sandwich" in content)
 
 	def test_analyze_video_dne(self):
 		video = "test/data/dne.mp4"

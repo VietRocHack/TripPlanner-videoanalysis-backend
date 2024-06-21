@@ -24,5 +24,13 @@ class AnalyzeVideoUnitTest(unittest.TestCase):
 
 		self.assertEqual(len(result), num_frames_to_sample)
 
+	def test_analyze_video_from_url(self):
+		video = "https://www.tiktok.com/@jacksdiningroom/video/7273630854000364846?lang=en"
+		result, content = analyze_videos.analyze(video)
+
+		self.assertEqual(result, True)
+		self.assertTrue("video" in content)
+		self.assertTrue("sandwich" in content)
+
 if __name__ == '__main__':
 	unittest.main()

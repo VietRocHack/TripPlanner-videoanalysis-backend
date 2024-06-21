@@ -5,43 +5,42 @@ import settings
 from openai import OpenAI
 import base64
 
-client = OpenAI(api_key=settings.openapi_key)
-
-with open('function/prompt.json', 'r') as prompt_file:
-	prompt_json = json.load(prompt_file)
-	system_prompt = prompt_json["system_prompt"]
-	user_prompt = prompt_json["user_prompt"]
-
-def analyze_image(image):
+def analyze_images(images: list):
 	# Convert the image to JPG format
-	_, image_jpg = cv2.imencode('.jpg', image)
-
-	# Convert the image data to bytes
-	base64_image = base64.b64encode(image_jpg.tobytes()).decode('utf-8')
+	# Convert the images to JPG format
+	base_64_list = []
+	for image in images:
+		_, image_jpg = cv2.imencode('.jpg', image)
+		base_64_list.append(base64.b64encode(image_jpg.tobytes()).decode('utf-8'))
 
 	headers = {
 		"Content-Type": "application/json",
 		"Authorization": f"Bearer {settings.openapi_key}"
 	}
 
+	content = []
+	content.append(
+		{
+			"type": "text",
+			"text": "These images are chronological sequence of a TikTok video. Analyze the content of this video in one paragraph only."
+		})
+	
+	for base64_image in base_64_list:
+		content.append(
+			{
+				"type": "image_url",
+				"image_url": {
+					"detail": "low", # details low is around 20 tokens, while detail high is around 900 tokens
+					"url": f"data:image/jpeg;base64,{base64_image}"
+				}
+			})
+
 	payload = {
 		"model": "gpt-4o",
 		"messages": [
 			{
 				"role": "user",
-				"content": [
-					{
-						"type": "text",
-						"text": "What's in this image?"
-					},
-					{
-						"type": "image_url",
-						"image_url": {
-							"detail": "low", # details low is around 20 tokens, while detail high is around 900 tokens
-							"url": f"data:image/jpeg;base64,{base64_image}"
-						}
-					}
-				]
+				"content": content
 			}
 		],
 		"max_tokens": 300

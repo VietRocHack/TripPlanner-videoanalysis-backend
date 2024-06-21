@@ -1,4 +1,5 @@
 import cv2
+from function import openai_request 
 
 def analyze(video_url):
 	frames = []
@@ -7,7 +8,7 @@ def analyze(video_url):
 	except Exception as e:
 		return (False, str(e))
 
-	return (True, "")
+	return (True, openai_request.analyze_images(frames))
 
 def sample_images(video_url: str, num_frames_to_sample: int = 5) -> list:
 	# Load the video

@@ -1,0 +1,4 @@
+{
+  "system_prompt": "Please analyze the image sampled from a TikTok video.",
+  "user_prompt": "This is the image, please analyze it."
+}

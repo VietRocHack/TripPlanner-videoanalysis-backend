@@ -20,10 +20,6 @@ def sample_images(video_url: str, num_frames_to_sample: int = 5) -> list:
 	frames = []
 	total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
-	# Check if the number of frames in the video is greater than the desired
-	# number of frames to sample
-	num_frames_to_sample = min(num_frames_to_sample, total_frames)
-
 	# Calculate the step size to sample frames equally
 	step_size = total_frames // num_frames_to_sample
 

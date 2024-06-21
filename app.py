@@ -12,7 +12,7 @@ model = "gpt-3.5-turbo"
 
 @app.route("/")
 def index():
-    return jsonify("Hello world")
+    return "Hello world"
 
 @app.route("/analyze_videos", methods=['GET'])
 def generate_itinerary():
@@ -33,4 +33,4 @@ def generate_itinerary():
     return completion.choices[0].message.content
 
 if __name__ == "__main__":
-    app.run(port=8000)
+    app.run()

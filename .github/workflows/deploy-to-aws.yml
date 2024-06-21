@@ -65,6 +65,7 @@ jobs:
     - name: Run unit tests
       run: |
         cd $HOSTING_DIR/$STAGE/
+        source venv/bin/activate
         python -m unittest
 
     - name: Reload/start WSGI service

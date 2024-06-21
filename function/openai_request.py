@@ -37,6 +37,7 @@ def analyze_image(image):
 					{
 						"type": "image_url",
 						"image_url": {
+							"detail": "low", # details low is around 20 tokens, while detail high is around 900 tokens
 							"url": f"data:image/jpeg;base64,{base64_image}"
 						}
 					}

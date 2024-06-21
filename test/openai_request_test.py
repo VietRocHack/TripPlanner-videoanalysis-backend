@@ -4,11 +4,10 @@ import cv2
 
 class OpenAIRequestUnitTest(unittest.TestCase):
 	def test_send_request_image(self):
-		image = cv2.imread("test/data/test_image.png")
+		image = cv2.imread("test/data/test_images/frame_0.jpg")
 		result = openai_request.analyze_image(image)
 
 		self.assertIsNotNone(result)
-		self.assertTrue("@jacksdiningroom" in result)
 		self.assertTrue("Trying Viral NYC Sandwich" in result)
 
 

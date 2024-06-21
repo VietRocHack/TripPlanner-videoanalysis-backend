@@ -63,7 +63,9 @@ jobs:
       run: cp $HOSTING_DIR/settings.py $HOSTING_DIR/$STAGE/
     
     - name: Run unit tests
-      run: python -m unittest
+      run: |
+        cd $HOSTING_DIR/$STAGE/
+        python -m unittest
 
     - name: Reload/start WSGI service
       run: |

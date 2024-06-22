@@ -29,7 +29,6 @@ class AnalyzeVideoUnitTest(unittest.TestCase):
 		url = f"https://www.tiktok.com/@jacksdiningroom/video/{video_id}?lang=en"
 		result, content = analyze_videos.analyze_from_urls([url])
 
-		print(result, content)
 		self.assertTrue(result)
 		self.assertIn(video_id, content)
 		self.assertIsNotNone(content[video_id])
@@ -39,13 +38,26 @@ class AnalyzeVideoUnitTest(unittest.TestCase):
 		self.assertTrue("video" in analysis)
 		self.assertTrue("sandwich" in analysis)
 
-	def test_invalid_url_bad_download_link(self):
-		url = "https://www.tiktok.com/@jacksdiningroom/video/gibberish"
+	def test_invalid_url_not_from_tiktok(self):
+		url = "https://www.youtube.com"
+		result, content = analyze_videos.analyze_from_urls([url])
+
+		self.assertFalse(result)
+		self.assertEqual(content, "One or more video URLs are not from TikTok.")
+
+	def test_invalid_url_invalid_download_link(self):
+		url = "https://www.tiktok.com/@jacksdiningroom/video"
 		result, content = analyze_videos.analyze_from_urls([url])
 
 		self.assertFalse(result)
 		self.assertEqual(content, "Invalid TikTok video URL.")
 
+	def test_invalid_url_bad_download_link(self):
+		url = "https://www.tiktok.com/@jacksdiningroom/video/gibberish"
+		result, content = analyze_videos.analyze_from_urls([url])
+
+		self.assertFalse(result)
+		self.assertEqual(content, "Something happens during downloading video.")
 
 if __name__ == '__main__':
 	unittest.main()

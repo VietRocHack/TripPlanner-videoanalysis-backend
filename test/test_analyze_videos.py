@@ -4,7 +4,7 @@ from function import analyze_videos
 class AnalyzeVideoUnitTest(unittest.TestCase):
 	def test_analyze_video(self):
 		video = "test/data/test_video.mp4"
-		result, content = analyze_videos.analyze(video)
+		result, content = analyze_videos.analyze_from_path(video)
 
 		self.assertEqual(result, True)
 		self.assertTrue("video" in content)
@@ -12,7 +12,7 @@ class AnalyzeVideoUnitTest(unittest.TestCase):
 
 	def test_analyze_video_dne(self):
 		video = "test/data/dne.mp4"
-		result, content = analyze_videos.analyze(video)
+		result, content = analyze_videos.analyze_from_path(video)
 
 		self.assertEqual(result, False)
 		self.assertEqual(content, "Failed to load video")
@@ -25,12 +25,27 @@ class AnalyzeVideoUnitTest(unittest.TestCase):
 		self.assertEqual(len(result), num_frames_to_sample)
 
 	def test_analyze_video_from_url(self):
-		video = "https://www.tiktok.com/@jacksdiningroom/video/7273630854000364846?lang=en"
-		result, content = analyze_videos.analyze(video)
+		video_id = "7273630854000364846"
+		url = f"https://www.tiktok.com/@jacksdiningroom/video/{video_id}?lang=en"
+		result, content = analyze_videos.analyze_from_urls([url])
 
-		self.assertEqual(result, True)
-		self.assertTrue("video" in content)
-		self.assertTrue("sandwich" in content)
+		print(result, content)
+		self.assertTrue(result)
+		self.assertIn(video_id, content)
+		self.assertIsNotNone(content[video_id])
+
+		analysis = content[video_id]
+
+		self.assertTrue("video" in analysis)
+		self.assertTrue("sandwich" in analysis)
+
+	def test_invalid_url_bad_download_link(self):
+		url = "https://www.tiktok.com/@jacksdiningroom/video/gibberish"
+		result, content = analyze_videos.analyze_from_urls([url])
+
+		self.assertFalse(result)
+		self.assertEqual(content, "Invalid TikTok video URL.")
+
 
 if __name__ == '__main__':
 	unittest.main()

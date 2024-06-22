@@ -91,8 +91,6 @@ class AnalyzeVideoUnitTest(unittest.TestCase):
 
 		result, content = analyze_videos.analyze_from_urls(urls)
 
-		print(result, content)
-
 		self.assertTrue(result)
 
 		for test_video in test_videos:

@@ -21,12 +21,14 @@ jobs:
 
     - name: Set environment for merge to main branch
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-      run: echo "STAGE=prod" >> $GITHUB_ENV
+      run: |
+        echo "STAGE=prod" >> $GITHUB_ENV
         echo "PORT=8002" >> $GITHUB_ENV
 
     - name: Set environment for pull request
       if: github.event_name == 'pull_request'
-      run: echo "STAGE=dev" >> $GITHUB_ENV
+      run: |
+        echo "STAGE=dev" >> $GITHUB_ENV
         echo "PORT=8003" >> $GITHUB_ENV
 
     - name: Set environment for service name and hosting folder

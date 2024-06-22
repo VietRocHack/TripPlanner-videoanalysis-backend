@@ -78,10 +78,8 @@ jobs:
 
     - name: Verify service is running
       run: |
-          sleep 5
-          systemctl status $SERVICE_NAME | grep "Active:"
-          if ! systemctl status $SERVICE_NAME | grep "active (running)"; then
-            systemctl status $SERVICE_NAME
-            echo "::error::Itinerary backend service encounters an error, check systemctl log to see what went wrong"
-            exit 1
-          fi
+        sleep 10
+        curl -f http://0.0.0.0:$PORT || 
+        (echo "::error::Itinerary backend service encounters an error, check below log to see what went wrong" &&
+          journalctl -u $SERVICE_NAME -n 50 &&
+          exit 1)

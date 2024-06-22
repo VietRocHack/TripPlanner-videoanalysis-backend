@@ -21,11 +21,15 @@ jobs:
 
     - name: Set environment for merge to main branch
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-      run: echo "STAGE=prod" >> $GITHUB_ENV
+      run: |
+        echo "STAGE=prod" >> $GITHUB_ENV
+        echo "PORT=8002" >> $GITHUB_ENV
 
     - name: Set environment for pull request
       if: github.event_name == 'pull_request'
-      run: echo "STAGE=dev" >> $GITHUB_ENV
+      run: |
+        echo "STAGE=dev" >> $GITHUB_ENV
+        echo "PORT=8003" >> $GITHUB_ENV
 
     - name: Set environment for service name and hosting folder
       run: |
@@ -58,10 +62,12 @@ jobs:
         source venv/bin/activate
         pip install -r requirements.txt
         pip install gunicorn
-
-    - name: Copy settings file to host
-      run: cp $HOSTING_DIR/settings.py $HOSTING_DIR/$STAGE/
     
+    - name: Setup .env file
+      run: |
+        cd $HOSTING_DIR/$STAGE/
+        echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
+
     - name: Run unit tests
       run: |
         cd $HOSTING_DIR/$STAGE/
@@ -76,10 +82,8 @@ jobs:
 
     - name: Verify service is running
       run: |
-          sleep 5
-          systemctl status $SERVICE_NAME | grep "Active:"
-          if ! systemctl status $SERVICE_NAME | grep "active (running)"; then
-            systemctl status $SERVICE_NAME
-            echo "::error::Itinerary backend service encounters an error, check systemctl log to see what went wrong"
-            exit 1
-          fi
+        sleep 10
+        curl -f http://0.0.0.0:$PORT || 
+        (echo "::error::Itinerary backend service encounters an error, check below log to see what went wrong" &&
+          journalctl -u $SERVICE_NAME -n 50 &&
+          exit 1)

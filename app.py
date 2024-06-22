@@ -1,12 +1,13 @@
 from flask import Flask, jsonify, request
-import requests
 
-import settings
 from openai import OpenAI
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
 
-client = OpenAI(api_key=settings.openapi_key)
+client = OpenAI()
 
 model = "gpt-3.5-turbo"
 

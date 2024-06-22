@@ -8,7 +8,10 @@ ydl_opts = {
 	'outtmpl': './dl/vid-%(id)s.%(ext)s'
 }
 
-def analyze_from_urls(video_urls: list[str]) -> dict[str: str | None] | str:
+def analyze_from_urls(
+		video_urls: list[str],
+		num_frames_to_sample: int = 5
+	) -> dict[str: str | None] | str:
 	# mapping: {video_id: analysis}
 	video_analysis = {}
 
@@ -27,7 +30,8 @@ def analyze_from_urls(video_urls: list[str]) -> dict[str: str | None] | str:
 		return False, "Something happens during downloading video."
 
 	for video_id in video_analysis:
-		result, content = analyze_from_path(f'dl/vid-{video_id}.mp4')
+		print(f"Analyzing {video_id}")
+		result, content = analyze_from_path(f'dl/vid-{video_id}.mp4', num_frames_to_sample)
 		if result == True:
 			video_analysis[video_id] = content
 		else:
@@ -35,10 +39,10 @@ def analyze_from_urls(video_urls: list[str]) -> dict[str: str | None] | str:
 
 	return True, video_analysis
 
-def analyze_from_path(video_path: str):
+def analyze_from_path(video_path: str, num_frames_to_sample: int = 5):
 	frames = []
 	try:
-		frames = sample_images(video_path)
+		frames = sample_images(video_path, num_frames_to_sample)
 	except Exception as e:
 		return (False, str(e))
 

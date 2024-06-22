@@ -1,9 +1,11 @@
 import requests
 import cv2
-import json
-import settings
 from openai import OpenAI
 import base64
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 def analyze_images(images: list):
 	# Convert the image to JPG format
@@ -15,7 +17,7 @@ def analyze_images(images: list):
 
 	headers = {
 		"Content-Type": "application/json",
-		"Authorization": f"Bearer {settings.openapi_key}"
+		"Authorization": f"Bearer { os.environ.get('OPENAI_API_KEY') }"
 	}
 
 	content = []

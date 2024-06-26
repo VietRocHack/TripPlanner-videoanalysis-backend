@@ -4,10 +4,11 @@ from openai import OpenAI
 import base64
 from dotenv import load_dotenv
 import os
+import json
 
 load_dotenv()
 
-def analyze_images(images: list, metadata = None):
+def analyze_images(images: list, metadata: dict[str: str] = {}):
 	# Convert the image to JPG format
 	# Convert the images to JPG format
 	base_64_list = []
@@ -24,11 +25,15 @@ def analyze_images(images: list, metadata = None):
 	content.append(
 		{
 			"type": "text",
-			"text": """These images are from a TikTok video."""
-			"""Analyze this video using simple and to-the-point""" 
-			"""vocab and in one paragraph"""
+			"text": """These images are from a TikTok video. """
+			"""Analyze this video using simple and to-the-point """ 
+			"""vocab and in one paragraph. """
+			"""Included is a metadata of the video for better analysis: """
+			f"""{json.dumps(metadata)} """
 		})
 	
+	print(content)
+
 	for base64_image in base_64_list:
 		content.append(
 			{

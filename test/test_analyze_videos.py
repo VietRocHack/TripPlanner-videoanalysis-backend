@@ -113,18 +113,28 @@ class AnalyzeVideoUnitTest(unittest.TestCase):
 
 	def test_analyze_video_with_metadata(self):
 		video = "test/data/test_video.mp4"
-		f = open('test/data/test_video_urls.json')
+		f = open('test/data/test_video_metadata.json')
 		metadata = json.load(f)
 		f.close()
+		print(metadata)
 		result, content = analyze_videos.analyze_from_path(
 			video_path=video,
 			metadata=metadata
 		)
-
+		print(content)
 		self.assertEqual(result, True)
 		self.assertTrue("video" in content)
 		self.assertTrue("sandwich" in content)
-		self.assertTrue("Mama's Too" in content)
+		self.assertTrue("Mama" in content)
+		self.assertTrue("Too" in content)
+		self.assertTrue(
+			"New York" in content
+			or "NYC" in content
+		)
+		self.assertTrue(
+			"Upper West Side" in content
+			or "UWS" in content
+		)
 
 if __name__ == '__main__':
 	unittest.main()

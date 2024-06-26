@@ -84,7 +84,7 @@ def analyze_from_path(
 	except Exception as e:
 		return (False, str(e))
 
-	return (True, openai_request.analyze_images(frames))
+	return (True, openai_request.analyze_images(frames, metadata=metadata))
 
 def download_videos(video_urls):
 	with YoutubeDL(ydl_opts) as ydl:

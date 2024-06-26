@@ -48,6 +48,16 @@ class AnalyzeVideoUnitTest(unittest.TestCase):
 
 		self.assertTrue("video" in analysis)
 		self.assertTrue("sandwich" in analysis)
+		self.assertTrue("Mama" in analysis)
+		self.assertTrue("Too" in analysis)
+		self.assertTrue(
+			"New York" in analysis
+			or "NYC" in analysis
+		)
+		self.assertTrue(
+			"Upper West Side" in analysis
+			or "UWS" in analysis
+		)
 
 	def test_invalid_url_not_from_tiktok(self):
 		url = "https://www.youtube.com"
@@ -116,12 +126,11 @@ class AnalyzeVideoUnitTest(unittest.TestCase):
 		f = open('test/data/test_video_metadata.json')
 		metadata = json.load(f)
 		f.close()
-		print(metadata)
 		result, content = analyze_videos.analyze_from_path(
 			video_path=video,
 			metadata=metadata
 		)
-		print(content)
+
 		self.assertEqual(result, True)
 		self.assertTrue("video" in content)
 		self.assertTrue("sandwich" in content)

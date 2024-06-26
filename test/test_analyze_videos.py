@@ -70,7 +70,13 @@ class AnalyzeVideoUnitTest(unittest.TestCase):
 		self.assertFalse(result)
 		self.assertEqual(content, "Something happens during downloading video.")
 
-	def test_analyze_video_from_multiple_urls(self):
+	def test_analyze_video_from_multiple_urls_without_async(self):
+		self._send_test_request_with_multiple_urls(use_async=False)
+
+	def test_analyze_video_from_multiple_urls_with_async(self):
+		self._send_test_request_with_multiple_urls(use_async=True)
+
+	def _send_test_request_with_multiple_urls(self, use_async):
 		# Load videos for testing
 		test_videos: list[VideoAnalysisTestObject] = []
 		f = open('test/data/test_video_urls.json')
@@ -89,7 +95,7 @@ class AnalyzeVideoUnitTest(unittest.TestCase):
 		for test_video in test_videos:
 			urls.append(test_video.get_video_url())
 
-		result, content = analyze_videos.analyze_from_urls(urls)
+		result, content = analyze_videos.analyze_from_urls(urls, use_async=use_async)
 
 		self.assertTrue(result)
 
@@ -103,7 +109,6 @@ class AnalyzeVideoUnitTest(unittest.TestCase):
 			# Test quality of analysis
 			for should_contain in test_video.should_contain:
 				self.assertIn(should_contain, analysis)
-
 
 if __name__ == '__main__':
 	unittest.main()

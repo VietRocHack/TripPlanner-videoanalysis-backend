@@ -111,5 +111,20 @@ class AnalyzeVideoUnitTest(unittest.TestCase):
 			for should_contain in test_video.should_contain:
 				self.assertIn(should_contain, analysis)
 
+	def test_analyze_video_with_metadata(self):
+		video = "test/data/test_video.mp4"
+		f = open('test/data/test_video_urls.json')
+		metadata = json.load(f)
+		f.close()
+		result, content = analyze_videos.analyze_from_path(
+			video_path=video,
+			metadata=metadata
+		)
+
+		self.assertEqual(result, True)
+		self.assertTrue("video" in content)
+		self.assertTrue("sandwich" in content)
+		self.assertTrue("Mama's Too" in content)
+
 if __name__ == '__main__':
 	unittest.main()

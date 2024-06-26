@@ -75,7 +75,8 @@ def analyze_from_urls(
 
 def analyze_from_path(
 		video_path: str,
-		num_frames_to_sample: int = 5
+		num_frames_to_sample: int = 5,
+		metadata: dict[str: str] = {}
 	):
 	frames = []
 	try:

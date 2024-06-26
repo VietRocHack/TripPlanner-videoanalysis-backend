@@ -7,7 +7,7 @@ import os
 
 load_dotenv()
 
-def analyze_images(images: list):
+def analyze_images(images: list, metadata = None):
 	# Convert the image to JPG format
 	# Convert the images to JPG format
 	base_64_list = []

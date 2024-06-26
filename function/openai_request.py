@@ -32,8 +32,6 @@ def analyze_images(images: list, metadata: dict[str: str] = {}):
 			f"""{json.dumps(metadata)} """
 		})
 	
-	print(content)
-
 	for base64_image in base_64_list:
 		content.append(
 			{

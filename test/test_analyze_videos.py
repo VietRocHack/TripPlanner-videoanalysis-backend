@@ -70,6 +70,7 @@ class AnalyzeVideoUnitTest(unittest.TestCase):
 		self.assertFalse(result)
 		self.assertEqual(content, "Something happens during downloading video.")
 
+	@unittest.skip("Sequential version, here for debugging purpose only")
 	def test_analyze_video_from_multiple_urls_no_speedup(self):
 		self._send_test_request_with_multiple_urls(use_parallel=False)
 

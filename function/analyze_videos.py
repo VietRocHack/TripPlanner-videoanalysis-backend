@@ -55,8 +55,6 @@ def analyze_from_urls(
 		for thread in threads:
 			thread.join()
 
-		print(results)
-
 		for video_id, (result, content) in results.items():
 			if result == True:
 				video_analysis[video_id] = content

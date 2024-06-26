@@ -24,7 +24,9 @@ def analyze_images(images: list):
 	content.append(
 		{
 			"type": "text",
-			"text": "These images are chronological sequence of a TikTok video. Analyze the content of this video in one paragraph only."
+			"text": """These images are from a TikTok video."""
+			"""Analyze this video using simple and to-the-point""" 
+			"""vocab and in one paragraph"""
 		})
 	
 	for base64_image in base_64_list:
@@ -45,10 +47,9 @@ def analyze_images(images: list):
 				"content": content
 			}
 		],
-		"max_tokens": 300
+		"max_tokens": 200
 	}
 
-	# Find API request object here https://platform.openai.com/docs/guides/vision
 	response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
 
 	return response.json()["choices"][0]["message"]["content"]

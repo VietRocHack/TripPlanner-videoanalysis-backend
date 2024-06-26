@@ -1,0 +1,32 @@
+[
+	{
+		"user": "@jacksdiningroom",
+		"video_id": "7273630854000364846",
+		"should_contain": ["sandwich"]
+	},
+	{
+		"user": "@waynedang",
+		"video_id": "7382685489637330222",
+		"should_contain": ["food"]
+	},
+	{
+		"user": "@janiedevours",
+		"video_id": "7382660407804103982",
+		"should_contain": ["bagel"]
+	},
+	{
+		"user": "@thatfoodielyss",
+		"video_id": "7381879334853791019",
+		"should_contain": ["cookies", "milk"]
+	},
+	{
+		"user": "@maliaelaine",
+		"video_id": "7382421643236232491",
+		"should_contain": ["food"]
+	},
+	{
+		"user": "@1hourlunchbreak",
+		"video_id": "7382290455230205230",
+		"should_contain": ["cake"]
+	}
+]

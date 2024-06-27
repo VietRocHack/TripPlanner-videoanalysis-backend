@@ -59,7 +59,7 @@ class HttpTest(unittest.TestCase):
 			self.assertIn("request", metadata)
 			self.assertIn("timestamp", metadata)
 
-			metadata_request = response_data["request"]
+			metadata_request = metadata["request"]
 			self.assertEqual(metadata_request, request)
 
 if __name__ == "__main__":

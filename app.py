@@ -1,3 +1,4 @@
+import time
 from flask import Flask, jsonify, request
 from openai import OpenAI
 from dotenv import load_dotenv
@@ -35,8 +36,19 @@ def generate_itinerary():
 		use_parallel=USE_PARALLEL # parallel for speedup
 	)
 
+	response_packet = {
+		"video_analysis": content,
+		"metadata": {
+			"request": {
+				"video_urls": urls,
+				"num_frames_to_sample": num_frames_to_sample
+			},
+			"timestamp": int(time.time())
+		}
+	}
+
 	if result:
-		return jsonify(content), 200
+		return jsonify(response_packet), 200
 	else:
 		return jsonify({"error": content}), 500
 	

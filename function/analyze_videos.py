@@ -9,6 +9,7 @@ from dataclasses import dataclass
 ydl_opts = {
 	'outtmpl': './dl/vid-%(id)s.%(ext)s',
 	'quiet': True,
+	'no_warnings': True,
 }
 
 @dataclass
@@ -85,7 +86,11 @@ def analyze_from_urls(
 		for video_id in video_ids:
 			print(f"Analyzing {video_id}")
 			vid_obj = video_objects[video_id]
-			result, content = analyze_from_path(vid_obj.path, num_frames_to_sample)
+			result, content = analyze_from_path(
+				vid_obj.path,
+				num_frames_to_sample,
+				vid_obj.metadata
+			)
 			if result == True:
 				video_analysis[video_id] = content
 			else:

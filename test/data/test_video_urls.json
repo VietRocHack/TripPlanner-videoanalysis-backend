@@ -2,31 +2,43 @@
 	{
 		"user": "@jacksdiningroom",
 		"video_id": "7273630854000364846",
-		"should_contain": ["sandwich"]
+		"should_contain": {
+      "content": ["sandwich"]
+    }
 	},
 	{
 		"user": "@waynedang",
 		"video_id": "7382685489637330222",
-		"should_contain": ["food"]
+		"should_contain": {
+      "content": ["food"]
+    }
 	},
 	{
 		"user": "@janiedevours",
 		"video_id": "7382660407804103982",
-		"should_contain": ["bagel"]
+		"should_contain": {
+      "content": ["bagel"]
+    }
 	},
 	{
 		"user": "@thatfoodielyss",
 		"video_id": "7381879334853791019",
-		"should_contain": ["cookies", "milk"]
+		"should_contain": {
+      "content": ["cookies", "milk"]
+    }
 	},
 	{
 		"user": "@maliaelaine",
 		"video_id": "7382421643236232491",
-		"should_contain": ["food"]
+		"should_contain": {
+      "content": ["food"]
+    }
 	},
 	{
 		"user": "@1hourlunchbreak",
 		"video_id": "7382290455230205230",
-		"should_contain": ["cake"]
+		"should_contain": {
+      "content": ["cake"]
+    }
 	}
 ]

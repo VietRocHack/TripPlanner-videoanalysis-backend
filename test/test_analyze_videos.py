@@ -148,7 +148,6 @@ class AnalyzeVideoUnitTest(unittest.TestCase):
 		self.assertIsNotNone(content[video_id])
 
 		analysis = content[video_id]
-
 		self.assertEqual(result, True)
 		self.assertTrue("video" in analysis)
 		self.assertTrue("sandwich" in analysis)

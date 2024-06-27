@@ -8,7 +8,7 @@ import json
 
 load_dotenv()
 
-def analyze_images(images: list, metadata: dict[str: str] = {}):
+def analyze_images(images: list, metadata: dict[str, str] = {}):
 	# Convert the image to JPG format
 	# Convert the images to JPG format
 	base_64_list = []

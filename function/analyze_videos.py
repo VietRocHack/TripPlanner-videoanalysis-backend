@@ -3,20 +3,28 @@ from function import openai_request
 from yt_dlp import YoutubeDL
 from urllib.parse import urlparse
 import threading
+from dataclasses import dataclass
 
 # YoutubeDL options to set output filename to vid-{id} and put it in dl folder
 ydl_opts = {
 	'outtmpl': './dl/vid-%(id)s.%(ext)s'
 }
 
+@dataclass
+class _TikTokVideoObject:
+	id: str
+	path: str
+	metadata: dict[str, str]
 
 def analyze_from_urls(
 		video_urls: list[str],
 		num_frames_to_sample: int = 5,
-		use_parallel: bool = False
-	) -> dict[str: str | None] | str:
+		use_parallel: bool = True, # use parallel running by default
+		metadata_fields: list[str] = [] # supports "title", [more to be added]
+	) -> dict[str, str | None] | str:
 	# mapping: {video_id: analysis}
-	video_analysis = {}
+	video_analysis: dict[str, dict[str: str]] = {}
+	video_objects: dict[str, _TikTokVideoObject] = {}
 
 	for url in video_urls:
 		parsed_url = urlparse(url)
@@ -25,14 +33,22 @@ def analyze_from_urls(
 		paths = parsed_url.path.split("/")
 		if len(paths) < 4:
 			return False, "Invalid TikTok video URL."
-		video_analysis[paths[3]] = None
 
-	try:
-		download_videos(video_urls)
-	except Exception as e:
-		return False, "Something happens during downloading video."
+		try:
+			metadata = download_single_video(url, metadata_fields=metadata_fields)
+		except Exception:
+			return False, "Something happens during downloading video."
 
-	video_ids = video_analysis.keys()
+		# If successfully downloaded, then keep data organized in one dataclass obj
+		video_id = paths[3]
+		video_objects[video_id] = _TikTokVideoObject(
+			id=video_id,
+			path=f'dl/vid-{video_id}.mp4',
+			metadata=metadata
+		)
+
+
+	video_ids = video_objects.keys()
 
 	# Use async to speed up requests from open_ai
 	if use_parallel:
@@ -41,13 +57,14 @@ def analyze_from_urls(
 		for video_id in video_ids:
 			print(f"Analyzing {video_id}")
 			thread = threading.Thread(
-				target=lambda id_: results.update(
-					{id_: analyze_from_path(
-						f'dl/vid-{id_}.mp4',
-						num_frames_to_sample
+				target=lambda vid_obj: results.update(
+					{vid_obj.id: analyze_from_path(
+						vid_obj.path,
+						num_frames_to_sample,
+						vid_obj.metadata
 					)}
 				),
-				args=(video_id,)
+				args=(video_objects[video_id],)
 			)
 			threads.append(thread)
 			thread.start()
@@ -55,6 +72,7 @@ def analyze_from_urls(
 		for thread in threads:
 			thread.join()
 
+		# Verify video analysis results is correct before returning
 		for video_id, (result, content) in results.items():
 			if result == True:
 				video_analysis[video_id] = content
@@ -65,7 +83,8 @@ def analyze_from_urls(
 		# sequential calls to open_ai, mostly here for testing purposes
 		for video_id in video_ids:
 			print(f"Analyzing {video_id}")
-			result, content = analyze_from_path(f'dl/vid-{video_id}.mp4', num_frames_to_sample)
+			vid_obj = video_objects[video_id]
+			result, content = analyze_from_path(vid_obj.path, num_frames_to_sample)
 			if result == True:
 				video_analysis[video_id] = content
 			else:
@@ -76,8 +95,8 @@ def analyze_from_urls(
 def analyze_from_path(
 		video_path: str,
 		num_frames_to_sample: int = 5,
-		metadata: dict[str: str] = {}
-	):
+		metadata: dict[str, str] = {}
+	) -> tuple[bool, str]:
 	frames = []
 	try:
 		frames = sample_images(video_path, num_frames_to_sample)
@@ -86,9 +105,36 @@ def analyze_from_path(
 
 	return (True, openai_request.analyze_images(frames, metadata=metadata))
 
-def download_videos(video_urls):
+def download_single_video(video_url: str, metadata_fields: dict[str, str] = []):
+	"""
+		Helper function to download single video using #download_videos()
+	"""
+	metadata = download_videos([video_url], metadata_fields)[0]
+	return metadata
+
+
+def download_videos(
+		video_urls: list[str], 
+		metadata_fields: dict[str, str] = []
+	) -> list[dict[str, str]]:
+	"""
+		Returns a list of metadata object that is filtered by the given metadata_fields
+	"""
+	metadata_list = []
 	with YoutubeDL(ydl_opts) as ydl:
-		ydl.download(video_urls)
+		for video_url in video_urls:
+			# download video and also extracting info
+			video = ydl.extract_info(video_url, download=True)
+
+			metadata = {}
+
+			for field in metadata_fields:
+				metadata[field] = video.get(field, None)
+
+			print(metadata)
+			metadata_list.append(metadata)
+		
+	return metadata_list
 
 def sample_images(video_path: str, num_frames_to_sample: int = 5) -> list:
 	# Load the video

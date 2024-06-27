@@ -157,5 +157,32 @@ class AnalyzeVideoUnitTest(unittest.TestCase):
 			or "NY" in analysis
 		)
 
+	def test_analyze_video_from_url_with_metadata_no_speedup(self):
+		video_id = "7273630854000364846"
+		url = f"https://www.tiktok.com/@jacksdiningroom/video/{video_id}?lang=en"
+		result, content = analyze_videos.analyze_from_urls(
+			[url],
+			metadata_fields=["title"],
+			use_parallel=False
+		)
+
+		self.assertTrue(result)
+		self.assertIn(video_id, content)
+		self.assertIsNotNone(content[video_id])
+
+		analysis = content[video_id]
+
+		print(analysis)
+
+		self.assertEqual(result, True)
+		self.assertTrue("video" in analysis)
+		self.assertTrue("sandwich" in analysis)
+		self.assertTrue("Mama" in analysis)
+		self.assertTrue("Too" in analysis)
+		self.assertTrue(
+			"New York" in analysis
+			or "NY" in analysis
+		)
+
 if __name__ == '__main__':
 	unittest.main()

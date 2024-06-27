@@ -7,7 +7,8 @@ from dataclasses import dataclass
 
 # YoutubeDL options to set output filename to vid-{id} and put it in dl folder
 ydl_opts = {
-	'outtmpl': './dl/vid-%(id)s.%(ext)s'
+	'outtmpl': './dl/vid-%(id)s.%(ext)s',
+	'quiet': True,
 }
 
 @dataclass

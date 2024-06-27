@@ -38,11 +38,16 @@ class AnalyzeVideoUnitTest(unittest.TestCase):
 		# verify fields in analysis
 		analysis = data[video_id]
 		self.assertIn("content", analysis)
+		self.assertIn("location", analysis)
 
 		# verify content
 		content = analysis["content"]
 		self.assertIn("video", content)
 		self.assertIn("sandwich", content)
+
+		# verify location
+		location = analysis["location"]
+		self.assertIn("NY", location)
 
 	def test_invalid_url_not_from_tiktok(self):
 		url = "https://www.youtube.com"

@@ -111,5 +111,74 @@ class AnalyzeVideoUnitTest(unittest.TestCase):
 			for should_contain in test_video.should_contain:
 				self.assertIn(should_contain, analysis)
 
+	def test_analyze_video_with_metadata(self):
+		video = "test/data/test_video.mp4"
+		f = open('test/data/test_video_metadata.json')
+		metadata = json.load(f)
+		f.close()
+		result, content = analyze_videos.analyze_from_path(
+			video_path=video,
+			metadata=metadata
+		)
+
+		self.assertEqual(result, True)
+		self.assertTrue("video" in content)
+		self.assertTrue("sandwich" in content)
+		self.assertTrue("Mama" in content)
+		self.assertTrue("Too" in content)
+		self.assertTrue(
+			"New York" in content
+			or "NYC" in content
+		)
+
+	def test_analyze_video_from_url_with_metadata(self):
+		video_id = "7273630854000364846"
+		url = f"https://www.tiktok.com/@jacksdiningroom/video/{video_id}?lang=en"
+		result, content = analyze_videos.analyze_from_urls(
+			[url],
+			metadata_fields=["title"]
+		)
+
+		self.assertTrue(result)
+		self.assertIn(video_id, content)
+		self.assertIsNotNone(content[video_id])
+
+		analysis = content[video_id]
+
+		self.assertEqual(result, True)
+		self.assertTrue("video" in analysis)
+		self.assertTrue("sandwich" in analysis)
+		self.assertTrue("Mama" in analysis)
+		self.assertTrue("Too" in analysis)
+		self.assertTrue(
+			"New York" in analysis
+			or "NY" in analysis
+		)
+
+	def test_analyze_video_from_url_with_metadata_no_speedup(self):
+		video_id = "7273630854000364846"
+		url = f"https://www.tiktok.com/@jacksdiningroom/video/{video_id}?lang=en"
+		result, content = analyze_videos.analyze_from_urls(
+			[url],
+			metadata_fields=["title"],
+			use_parallel=False
+		)
+
+		self.assertTrue(result)
+		self.assertIn(video_id, content)
+		self.assertIsNotNone(content[video_id])
+
+		analysis = content[video_id]
+
+		self.assertEqual(result, True)
+		self.assertTrue("video" in analysis)
+		self.assertTrue("sandwich" in analysis)
+		self.assertTrue("Mama" in analysis)
+		self.assertTrue("Too" in analysis)
+		self.assertTrue(
+			"New York" in analysis
+			or "NY" in analysis
+		)
+
 if __name__ == '__main__':
 	unittest.main()

@@ -48,16 +48,6 @@ class AnalyzeVideoUnitTest(unittest.TestCase):
 
 		self.assertTrue("video" in analysis)
 		self.assertTrue("sandwich" in analysis)
-		self.assertTrue("Mama" in analysis)
-		self.assertTrue("Too" in analysis)
-		self.assertTrue(
-			"New York" in analysis
-			or "NYC" in analysis
-		)
-		self.assertTrue(
-			"Upper West Side" in analysis
-			or "UWS" in analysis
-		)
 
 	def test_invalid_url_not_from_tiktok(self):
 		url = "https://www.youtube.com"
@@ -143,6 +133,34 @@ class AnalyzeVideoUnitTest(unittest.TestCase):
 		self.assertTrue(
 			"Upper West Side" in content
 			or "UWS" in content
+		)
+
+	def test_analyze_video_from_url_with_metadata(self):
+		video_id = "7273630854000364846"
+		url = f"https://www.tiktok.com/@jacksdiningroom/video/{video_id}?lang=en"
+		result, content = analyze_videos.analyze_from_urls(
+			[url],
+			metadata_fields=["title"]
+		)
+
+		self.assertTrue(result)
+		self.assertIn(video_id, content)
+		self.assertIsNotNone(content[video_id])
+
+		analysis = content[video_id]
+
+		self.assertEqual(result, True)
+		self.assertTrue("video" in analysis)
+		self.assertTrue("sandwich" in analysis)
+		self.assertTrue("Mama" in analysis)
+		self.assertTrue("Too" in analysis)
+		self.assertTrue(
+			"New York" in analysis
+			or "NYC" in analysis
+		)
+		self.assertTrue(
+			"Upper West Side" in analysis
+			or "UWS" in analysis
 		)
 
 if __name__ == '__main__':

@@ -24,8 +24,8 @@ class HttpTest(unittest.TestCase):
 			
 			# setup test packet
 			packet = {
-				"num_frames_to_sample": 10,
-				"urls": urls,
+				"num_frames_to_sample": 5,
+				"video_urls": urls,
 			}
 
 			response = self.app.post(
@@ -34,7 +34,7 @@ class HttpTest(unittest.TestCase):
 				content_type='application/json'
 			)
 			self.assertEqual(response.status_code, 200)
-			self.assertTrue(response.is_json())
+			self.assertTrue(response.is_json)
 
 			content = response.get_json()
 

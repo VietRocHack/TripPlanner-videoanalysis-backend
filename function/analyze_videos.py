@@ -23,7 +23,7 @@ def analyze_from_urls(
 		num_frames_to_sample: int = 5,
 		use_parallel: bool = True, # use parallel running by default
 		metadata_fields: list[str] = [] # supports "title", [more to be added]
-	) -> dict[str, str | None] | str:
+	) -> tuple[bool, dict[str, str]]:
 	# mapping: {video_id: analysis}
 	video_analysis: dict[str, dict[str: str]] = {}
 	video_objects: dict[str, _TikTokVideoObject] = {}

@@ -1,16 +1,7 @@
 import unittest
 from function import analyze_videos
 import json
-
-class VideoAnalysisTestObject():
-	def __init__(self, user: str, video_id: str, should_contain: list[str]):
-		self.user = user
-		self.video_id = video_id
-		# should_contains describes what the resulting analysis should have once done
-		self.should_contain = should_contain
-
-	def get_video_url(self):
-		return f"https://www.tiktok.com/{self.user}/video/{self.video_id}"
+import helper
 
 class AnalyzeVideoUnitTest(unittest.TestCase):
 	def test_analyze_video(self):
@@ -78,24 +69,12 @@ class AnalyzeVideoUnitTest(unittest.TestCase):
 		self._send_test_request_with_multiple_urls(use_parallel=True)
 
 	def _send_test_request_with_multiple_urls(self, use_parallel: bool):
-		# Load videos for testing
-		test_videos: list[VideoAnalysisTestObject] = []
-		f = open('test/data/test_video_urls.json')
-		data = json.load(f)
-		for test_video in data:
-			test_videos.append(
-				VideoAnalysisTestObject(
-					user=test_video["user"],
-					video_id=test_video["video_id"],
-					should_contain=test_video["should_contain"]
-				)
-			)
-		f.close()
+		test_videos: list[helper.VideoAnalysisTestObject] = helper.get_test_video_urls()
 
 		urls = []
 		for test_video in test_videos:
 			urls.append(test_video.get_video_url())
-
+		
 		result, content = analyze_videos.analyze_from_urls(urls, use_parallel=use_parallel)
 
 		self.assertTrue(result)

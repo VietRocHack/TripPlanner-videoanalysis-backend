@@ -131,7 +131,6 @@ def download_videos(
 			for field in metadata_fields:
 				metadata[field] = video.get(field, None)
 
-			print(metadata)
 			metadata_list.append(metadata)
 		
 	return metadata_list

@@ -1,7 +1,7 @@
 import unittest
 from function import analyze_videos
 import json
-import helper
+from . import helper
 
 class AnalyzeVideoUnitTest(unittest.TestCase):
 	def test_analyze_video(self):

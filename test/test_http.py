@@ -23,21 +23,26 @@ class HttpTest(unittest.TestCase):
 				urls.append(test_video.get_video_url())
 			
 			# setup test packet
-			packet = {
+			request = {
 				"num_frames_to_sample": 5,
 				"video_urls": urls,
 			}
 
 			response = self.app.post(
 				"/analyze_videos",
-				data=json.dumps(packet),
+				data=json.dumps(request),
 				content_type='application/json'
 			)
 			self.assertEqual(response.status_code, 200)
 			self.assertTrue(response.is_json)
 
-			content = response.get_json()
+			# check for all fields
+			response_data = response.get_json()
+			self.assertIn("video_analysis", response_data)
+			self.assertIn("metadata", response_data)
 
+			# checking for analysis
+			content = response_data["video_analysis"]
 			for test_video in test_videos:
 				video_id = test_video.video_id
 				self.assertIn(video_id, content)
@@ -48,6 +53,14 @@ class HttpTest(unittest.TestCase):
 				# Test quality of analysis
 				for should_contain in test_video.should_contain:
 					self.assertIn(should_contain, analysis)
+
+			# checking for metadata
+			metadata = response_data["metadata"]
+			self.assertIn("request", metadata)
+			self.assertIn("timestamp", metadata)
+
+			metadata_request = response_data["request"]
+			self.assertEqual(metadata_request, request)
 
 if __name__ == "__main__":
 		unittest.main()

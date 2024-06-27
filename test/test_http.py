@@ -34,7 +34,20 @@ class HttpTest(unittest.TestCase):
 				content_type='application/json'
 			)
 			self.assertEqual(response.status_code, 200)
-			self.assertEqual(response.data.decode("utf-8"), 'Hello world')
+			self.assertTrue(response.is_json())
+
+			content = response.get_json()
+
+			for test_video in test_videos:
+				video_id = test_video.video_id
+				self.assertIn(video_id, content)
+				self.assertIsNotNone(content[video_id])
+
+				analysis = content[video_id]
+
+				# Test quality of analysis
+				for should_contain in test_video.should_contain:
+					self.assertIn(should_contain, analysis)
 
 if __name__ == "__main__":
 		unittest.main()

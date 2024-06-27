@@ -1,3 +1,4 @@
 {
-"content": <overall analysis of the TikTok video"
+"content": <overall analysis of the TikTok video, including sentiments and feelings>,
+"location": <location (if exists) of the content of the video including local area name or street, city, state, country, as specific as possible, otherwise will be empty string>
 }

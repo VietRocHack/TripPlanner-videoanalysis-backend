@@ -29,7 +29,7 @@ class AnalyzeVideoUnitTest(unittest.TestCase):
 	def test_analyze_video_from_url(self):
 		video_id = "7273630854000364846"
 		url = f"https://www.tiktok.com/@jacksdiningroom/video/{video_id}?lang=en"
-		result, data = analyze_videos.analyze_from_urls([url])
+		result, data = analyze_videos.analyze_from_urls([url], metadata_fields=["title"])
 
 		self.assertTrue(result)
 		self.assertIn(video_id, data)
@@ -42,12 +42,18 @@ class AnalyzeVideoUnitTest(unittest.TestCase):
 
 		# verify content
 		content = analysis["content"]
-		self.assertIn("video", content)
 		self.assertIn("sandwich", content)
 
 		# verify location
 		location = analysis["location"]
-		self.assertIn("NY", location)
+		self.assertTrue(
+			"New York" in location
+			or "NY" in location
+		)
+		self.assertTrue(
+			"US" in location
+			or "United States" in location
+		)
 
 	def test_invalid_url_not_from_tiktok(self):
 		url = "https://www.youtube.com"

@@ -7,7 +7,7 @@ import os
 import json
 
 load_dotenv()
-print(os.getcwd())
+
 with open("./function/openai_analysis_json_template.txt") as f:
 	analysis_template = f.read()
 
@@ -53,7 +53,7 @@ def analyze_images(images: list, metadata: dict[str, str] = {}) -> dict:
 				"content": content
 			}
 		],
-		"max_tokens": 200
+		"max_tokens": 400
 	}
 
 	response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)

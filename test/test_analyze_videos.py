@@ -10,10 +10,10 @@ class AnalyzeVideoUnitTest(unittest.TestCase):
 	def test_analyze_video(self):
 		# This is the downloaded video of the first video in the test_videos
 		video = "test/data/test_video.mp4"
-		result, content = analyze_videos.analyze_from_path(video)
+		result, analysis = analyze_videos.analyze_from_path(video)
 
 		self.assertEqual(result, True)
-		self._verify_contain(content, TEST_VIDEOS[0].should_contain)
+		self._verify_contain(analysis["content"], ["sandwich", "chicken"])
 
 	def test_analyze_video_dne(self):
 		video = "test/data/dne.mp4"

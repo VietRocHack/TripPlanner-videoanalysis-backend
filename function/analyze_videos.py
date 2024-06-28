@@ -111,7 +111,7 @@ def analyze_from_path(
 		video_path: str,
 		num_frames_to_sample: int = 5,
 		metadata: dict[str, str] = {}
-	) -> tuple[bool, str]:
+	) -> tuple[bool, dict]:
 	"""
 		Analyze a video from its video path and metadata (optional)
 	"""

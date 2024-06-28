@@ -11,35 +11,40 @@
 		"user": "@waynedang",
 		"video_id": "7382685489637330222",
 		"should_contain": {
-      "content": ["food"]
+      "content": [["Soul", "Goode"], ["fried"]],
+      "location": [["Houston", "Texas", "TX"], ["US", "United States"]]
     }
 	},
 	{
 		"user": "@janiedevours",
 		"video_id": "7382660407804103982",
 		"should_contain": {
-      "content": ["bagel"]
+      "content": [["Layla", "Bagels"], ["bagels"]],
+      "location": [["Los", "Angeles", "LA"], ["US", "United States"]]
     }
 	},
 	{
 		"user": "@thatfoodielyss",
-		"video_id": "7381879334853791019",
+		"video_id": "7381879334853791019", 
 		"should_contain": {
-      "content": ["cookies", "milk"]
+      "content": [["Crumbl"], ["cookie", "milk"]],
+      "location": []
     }
 	},
 	{
 		"user": "@maliaelaine",
 		"video_id": "7382421643236232491",
 		"should_contain": {
-      "content": ["food"]
+      "content": [["Erewhon", "Market"], ["food"]],
+      "location": []
     }
 	},
 	{
 		"user": "@1hourlunchbreak",
 		"video_id": "7382290455230205230",
 		"should_contain": {
-      "content": ["cake"]
+      "content": [["cake", "cheese"], ["Uncle", "Tetsu"]],
+      "location": [["Los", "Angeles", "LA"], ["US", "United States"]]
     }
 	}
 ]

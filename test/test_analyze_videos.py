@@ -75,11 +75,14 @@ class AnalyzeVideoUnitTest(unittest.TestCase):
 		"""
 
 		for should_contain_list in should_contains:
+			is_good = False
 			# content must satisfy all the should_contain_list in the should_contains.
 			for should_contain in should_contain_list:
 				# content must have at least one of the word in the should_contain_list
 				if should_contain in content:
+					is_good = True
 					break
+			if not is_good:
 				self.fail(f"\"{ content }\" does not have one of the required { should_contain_list }")
 
 	def test_analyze_video_from_url(self):

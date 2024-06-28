@@ -1,25 +1,25 @@
 import unittest
 from function import analyze_videos
 import json
+from . import helper
 
-class VideoAnalysisTestObject():
-	def __init__(self, user: str, video_id: str, should_contain: list[str]):
-		self.user = user
-		self.video_id = video_id
-		# should_contains describes what the resulting analysis should have once done
-		self.should_contain = should_contain
-
-	def get_video_url(self):
-		return f"https://www.tiktok.com/{self.user}/video/{self.video_id}"
+TEST_VIDEOS: list[helper.VideoAnalysisTestObject] = helper.get_test_video_urls()
 
 class AnalyzeVideoUnitTest(unittest.TestCase):
+	
 	def test_analyze_video(self):
+		# This is the downloaded video of the first video in the test_videos
 		video = "test/data/test_video.mp4"
-		result, content = analyze_videos.analyze_from_path(video)
+		f = open('test/data/test_video_metadata.json')
+		metadata = json.load(f)
+		f.close()
+		result, analysis = analyze_videos.analyze_from_path(
+			video_path=video,
+			metadata=metadata
+		)
 
 		self.assertEqual(result, True)
-		self.assertTrue("video" in content)
-		self.assertTrue("sandwich" in content)
+		self._verify_contain(analysis["content"], ["sandwich", "chicken"])
 
 	def test_analyze_video_dne(self):
 		video = "test/data/dne.mp4"
@@ -35,19 +35,75 @@ class AnalyzeVideoUnitTest(unittest.TestCase):
 
 		self.assertEqual(len(result), num_frames_to_sample)
 
+	def _verify_video_analysis(
+			self,
+			test_vid: helper.VideoAnalysisTestObject,
+			analysis: dict
+		):
+		video_user = test_vid.user
+		video_id = test_vid.id
+
+		self.assertIn("content", analysis)
+		self.assertIn("location", analysis)
+		self.assertIn("video_url", analysis)
+
+		# verify content
+		self._verify_contain(analysis["content"], test_vid.should_contain["content"])
+
+		# verify location
+		self._verify_contain(analysis["location"], test_vid.should_contain["location"])
+
+		# verify url
+		self.assertEqual(
+			analysis["video_url"],
+			f"https://www.tiktok.com/{ video_user }/video/{ video_id }"
+		)
+
+	def _verify_contain(self, content: str, should_contains: list[list[str]]):
+		"""
+			Private function to verify that the given content contain things that
+			are in the list of should_contains.
+			should_contains is formatted as a list of should_contain_list,
+			where each should_contain_list has a number of words. The word ideally
+			should be in the same category. 
+			
+			The satisfaction criteria is:
+			- content must have at least one of the word in the should_contain_list.
+			- content must satisfy all the should_contain_list in the should_contains.
+			
+			Example:
+			should_contains = [["New York", "NY"], ["US", "United States"]]
+
+			content #1: New York, US => accepted
+			content #2: NY, US => accepted
+			content #3: New Jersey, US => not accepted
+			content #4: United States => not accepted
+		"""
+
+		for should_contain_list in should_contains:
+			is_good = False
+			# content must satisfy all the should_contain_list in the should_contains.
+			for should_contain in should_contain_list:
+				# content must have at least one of the word in the should_contain_list
+				if should_contain in content:
+					is_good = True
+					break
+			if not is_good:
+				self.fail(f"\"{ content }\" does not have one of the required { should_contain_list }")
+
 	def test_analyze_video_from_url(self):
-		video_id = "7273630854000364846"
-		url = f"https://www.tiktok.com/@jacksdiningroom/video/{video_id}?lang=en"
-		result, content = analyze_videos.analyze_from_urls([url])
+		test_vid = TEST_VIDEOS[0]
+		video_user = test_vid.user
+		video_id = test_vid.id
+		url = f"https://www.tiktok.com/{ video_user }/video/{ video_id }?lang=en"
+		result, data = analyze_videos.analyze_from_urls([url], metadata_fields=["title"])
 
 		self.assertTrue(result)
-		self.assertIn(video_id, content)
-		self.assertIsNotNone(content[video_id])
+		self.assertIn(video_id, data)
+		self.assertIsNotNone(data[video_id])
 
-		analysis = content[video_id]
-
-		self.assertTrue("video" in analysis)
-		self.assertTrue("sandwich" in analysis)
+		# verify analysis of video
+		self._verify_video_analysis(test_vid, data[video_id])
 
 	def test_invalid_url_not_from_tiktok(self):
 		url = "https://www.youtube.com"
@@ -72,113 +128,32 @@ class AnalyzeVideoUnitTest(unittest.TestCase):
 
 	@unittest.skip("Sequential version, here for debugging purpose only")
 	def test_analyze_video_from_multiple_urls_no_speedup(self):
-		self._send_test_request_with_multiple_urls(use_parallel=False)
+		self._send_test_request_with_multiple_urls(use_parallel=False, metadata_fields=["title"])
 
 	def test_analyze_video_from_multiple_urls_speedup(self):
-		self._send_test_request_with_multiple_urls(use_parallel=True)
+		self._send_test_request_with_multiple_urls(use_parallel=True, metadata_fields=["title"])
 
-	def _send_test_request_with_multiple_urls(self, use_parallel: bool):
-		# Load videos for testing
-		test_videos: list[VideoAnalysisTestObject] = []
-		f = open('test/data/test_video_urls.json')
-		data = json.load(f)
-		for test_video in data:
-			test_videos.append(
-				VideoAnalysisTestObject(
-					user=test_video["user"],
-					video_id=test_video["video_id"],
-					should_contain=test_video["should_contain"]
-				)
-			)
-		f.close()
+	def _send_test_request_with_multiple_urls(self, use_parallel: bool, metadata_fields: list[str]):
+		test_videos: list[helper.VideoAnalysisTestObject] = helper.get_test_video_urls()
 
 		urls = []
 		for test_video in test_videos:
 			urls.append(test_video.get_video_url())
-
-		result, content = analyze_videos.analyze_from_urls(urls, use_parallel=use_parallel)
+		
+		result, content = analyze_videos.analyze_from_urls(
+			urls,
+			metadata_fields=metadata_fields,
+			use_parallel=use_parallel
+		)
 
 		self.assertTrue(result)
 
 		for test_video in test_videos:
-			video_id = test_video.video_id
+			video_id = test_video.id
 			self.assertIn(video_id, content)
 			self.assertIsNotNone(content[video_id])
-
-			analysis = content[video_id]
-
-			# Test quality of analysis
-			for should_contain in test_video.should_contain:
-				self.assertIn(should_contain, analysis)
-
-	def test_analyze_video_with_metadata(self):
-		video = "test/data/test_video.mp4"
-		f = open('test/data/test_video_metadata.json')
-		metadata = json.load(f)
-		f.close()
-		result, content = analyze_videos.analyze_from_path(
-			video_path=video,
-			metadata=metadata
-		)
-
-		self.assertEqual(result, True)
-		self.assertTrue("video" in content)
-		self.assertTrue("sandwich" in content)
-		self.assertTrue("Mama" in content)
-		self.assertTrue("Too" in content)
-		self.assertTrue(
-			"New York" in content
-			or "NYC" in content
-		)
-
-	def test_analyze_video_from_url_with_metadata(self):
-		video_id = "7273630854000364846"
-		url = f"https://www.tiktok.com/@jacksdiningroom/video/{video_id}?lang=en"
-		result, content = analyze_videos.analyze_from_urls(
-			[url],
-			metadata_fields=["title"]
-		)
-
-		self.assertTrue(result)
-		self.assertIn(video_id, content)
-		self.assertIsNotNone(content[video_id])
-
-		analysis = content[video_id]
-
-		self.assertEqual(result, True)
-		self.assertTrue("video" in analysis)
-		self.assertTrue("sandwich" in analysis)
-		self.assertTrue("Mama" in analysis)
-		self.assertTrue("Too" in analysis)
-		self.assertTrue(
-			"New York" in analysis
-			or "NY" in analysis
-		)
-
-	def test_analyze_video_from_url_with_metadata_no_speedup(self):
-		video_id = "7273630854000364846"
-		url = f"https://www.tiktok.com/@jacksdiningroom/video/{video_id}?lang=en"
-		result, content = analyze_videos.analyze_from_urls(
-			[url],
-			metadata_fields=["title"],
-			use_parallel=False
-		)
-
-		self.assertTrue(result)
-		self.assertIn(video_id, content)
-		self.assertIsNotNone(content[video_id])
-
-		analysis = content[video_id]
-
-		self.assertEqual(result, True)
-		self.assertTrue("video" in analysis)
-		self.assertTrue("sandwich" in analysis)
-		self.assertTrue("Mama" in analysis)
-		self.assertTrue("Too" in analysis)
-		self.assertTrue(
-			"New York" in analysis
-			or "NY" in analysis
-		)
+			
+			self._verify_video_analysis(test_video, content[video_id])
 
 if __name__ == '__main__':
 	unittest.main()

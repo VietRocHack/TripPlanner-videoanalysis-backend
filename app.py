@@ -1,7 +1,9 @@
+import time
 from flask import Flask, jsonify, request
-
 from openai import OpenAI
 from dotenv import load_dotenv
+from function import analyze_videos
+
 
 load_dotenv()
 
@@ -11,27 +13,46 @@ client = OpenAI()
 
 model = "gpt-3.5-turbo"
 
+USE_PARALLEL = True
+
 @app.route("/")
 def index():
-    return "Hello world"
+	return "Hello world"
 
-@app.route("/analyze_videos", methods=['GET'])
+@app.route("/analyze_videos", methods=['POST'])
 def generate_itinerary():
-    user_prompt = request.args.get("prompt")
-    
-    system_prompt_file = open("./prompts/one_day_prompt_system_json.txt", "r")
-    system_prompt = system_prompt_file.read()
+	if not request.is_json:
+		return jsonify({"error": "Bad request "}), 400
 
-    completion = client.chat.completions.create(
-        model = model,
-        response_format={"type": "json_object"},
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
-        ]
-    )
+	json_data: dict = request.get_json()
+	# getting data for request
+	urls = json_data.get("video_urls")
+	num_frames_to_sample = json_data.get("num_frames_to_sample", 5)
 
-    return completion.choices[0].message.content
+	# processing request
+	result, content = analyze_videos.analyze_from_urls(
+		urls,
+		num_frames_to_sample,
+		use_parallel=USE_PARALLEL # parallel for speedup
+	)
+
+	response_packet = {
+		"video_analysis": content,
+		"metadata": {
+			"request": {
+				"video_urls": urls,
+				"num_frames_to_sample": num_frames_to_sample
+			},
+			"timestamp": int(time.time())
+		}
+	}
+
+	if result:
+		return jsonify(response_packet), 200
+	else:
+		return jsonify({"error": content}), 500
+	
+
 
 if __name__ == "__main__":
-    app.run()
+	app.run()

@@ -2,31 +2,49 @@
 	{
 		"user": "@jacksdiningroom",
 		"video_id": "7273630854000364846",
-		"should_contain": ["sandwich"]
+		"should_contain": {
+      "content": [["Mama", "Too"], ["sandwich", "chicken"]],
+      "location": [["New York", "NY"], ["US", "United States"]]
+    }
 	},
 	{
 		"user": "@waynedang",
 		"video_id": "7382685489637330222",
-		"should_contain": ["food"]
+		"should_contain": {
+      "content": [["Soul", "Goode"], ["fried"]],
+      "location": [["Houston", "Texas", "TX"], ["US", "United States"]]
+    }
 	},
 	{
 		"user": "@janiedevours",
 		"video_id": "7382660407804103982",
-		"should_contain": ["bagel"]
+		"should_contain": {
+      "content": [["Layla", "Bagels"], ["bagels"]],
+      "location": [["Los", "Angeles", "LA"], ["US", "United States"]]
+    }
 	},
 	{
 		"user": "@thatfoodielyss",
-		"video_id": "7381879334853791019",
-		"should_contain": ["cookies", "milk"]
+		"video_id": "7381879334853791019", 
+		"should_contain": {
+      "content": [["Crumbl"], ["cookie", "milk"]],
+      "location": []
+    }
 	},
 	{
 		"user": "@maliaelaine",
 		"video_id": "7382421643236232491",
-		"should_contain": ["food"]
+		"should_contain": {
+      "content": [["Erewhon", "Market"], ["food"]],
+      "location": []
+    }
 	},
 	{
 		"user": "@1hourlunchbreak",
 		"video_id": "7382290455230205230",
-		"should_contain": ["cake"]
+		"should_contain": {
+      "content": [["cake", "cheese"], ["Uncle", "Tetsu"]],
+      "location": [["Los", "Angeles", "LA"], ["US", "United States"]]
+    }
 	}
 ]

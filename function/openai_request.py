@@ -5,10 +5,18 @@ import base64
 from dotenv import load_dotenv
 import os
 import json
+import logging
+from function import utils
+import time
+
+openai_request_logger = utils.setup_logger(__name__, f"../logs/openai_request_logger_{int(time.time())}.log")
 
 load_dotenv()
 
-def analyze_images(images: list, metadata: dict[str, str] = {}):
+with open("./function/openai_analysis_json_template.txt") as f:
+	analysis_template = f.read()
+
+def analyze_images(images: list, metadata: dict[str, str] = {}) -> dict:
 	# Convert the image to JPG format
 	# Convert the images to JPG format
 	base_64_list = []
@@ -26,10 +34,9 @@ def analyze_images(images: list, metadata: dict[str, str] = {}):
 		{
 			"type": "text",
 			"text": """These images are from a TikTok video. """
-			"""Analyze this video using simple and to-the-point """ 
-			"""vocab and in one paragraph. """
-			"""Included is a metadata of the video for better analysis: """
-			f"""{json.dumps(metadata)} """
+			"""Analyze this video using simple and to-the-point vocab using this json format: """
+			f"""{ analysis_template }"""
+			f"""Included is a metadata of the video for better analysis: {json.dumps(metadata)} """
 		})
 	
 	for base64_image in base_64_list:
@@ -44,6 +51,7 @@ def analyze_images(images: list, metadata: dict[str, str] = {}):
 
 	payload = {
 		"model": "gpt-4o",
+  	"response_format": {"type": "json_object"},
 		"messages": [
 			{
 				"role": "user",
@@ -55,4 +63,10 @@ def analyze_images(images: list, metadata: dict[str, str] = {}):
 
 	response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
 
-	return response.json()["choices"][0]["message"]["content"]
+	openai_request_logger.info(f"Reponse received from OpenAI: {response.text}")
+
+	analysis_raw = response.json()["choices"][0]["message"]["content"]
+
+	analysis_json = json.loads(analysis_raw)
+
+	return analysis_json

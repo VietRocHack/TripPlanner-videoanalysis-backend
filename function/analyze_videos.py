@@ -15,15 +15,19 @@ ydl_opts = {
 @dataclass
 class _TikTokVideoObject:
 	id: str
+	user: str
 	path: str
 	metadata: dict[str, str]
+
+	def get_clean_url(self) -> str:
+		return f"https://www.tiktok.com/{ self.user }/video/{ self.id }"
 
 def analyze_from_urls(
 		video_urls: list[str],
 		num_frames_to_sample: int = 5,
 		use_parallel: bool = True, # use parallel running by default
 		metadata_fields: list[str] = [] # supports "title", [more to be added]
-	) -> dict[str, str | None] | str:
+	) -> tuple[bool, dict[str, str]]:
 	# mapping: {video_id: analysis}
 	video_analysis: dict[str, dict[str: str]] = {}
 	video_objects: dict[str, _TikTokVideoObject] = {}
@@ -45,6 +49,7 @@ def analyze_from_urls(
 		video_id = paths[3]
 		video_objects[video_id] = _TikTokVideoObject(
 			id=video_id,
+			user=paths[1],
 			path=f'dl/vid-{video_id}.mp4',
 			metadata=metadata
 		)
@@ -75,26 +80,30 @@ def analyze_from_urls(
 			thread.join()
 
 		# Verify video analysis results is correct before returning
-		for video_id, (result, content) in results.items():
+		for video_id, (result, data) in results.items():
 			if result == True:
-				video_analysis[video_id] = content
+				vid_obj = video_objects[video_id]
+				data["video_url"] = vid_obj.get_clean_url()
+				video_analysis[video_id] = data
 			else:
-				return False, f"Error happens during analyzing video id {video_id}: {content}"
+				return False, f"Error happens during analyzing video id {video_id}: {data}"
 			
 	else:
 		# sequential calls to open_ai, mostly here for testing purposes
 		for video_id in video_ids:
 			print(f"Analyzing {video_id}")
 			vid_obj = video_objects[video_id]
-			result, content = analyze_from_path(
+			result, data = analyze_from_path(
 				vid_obj.path,
 				num_frames_to_sample,
 				vid_obj.metadata
 			)
 			if result == True:
-				video_analysis[video_id] = content
+				vid_obj = video_objects[video_id]
+				data["video_url"] = vid_obj.get_clean_url()
+				video_analysis[video_id] = data
 			else:
-				return False, f"Error happens during analyzing video id {video_id}: {content}"
+				return False, f"Error happens during analyzing video id {video_id}: {data}"
 
 	return True, video_analysis
 
@@ -102,7 +111,10 @@ def analyze_from_path(
 		video_path: str,
 		num_frames_to_sample: int = 5,
 		metadata: dict[str, str] = {}
-	) -> tuple[bool, str]:
+	) -> tuple[bool, dict]:
+	"""
+		Analyze a video from its video path and metadata (optional)
+	"""
 	frames = []
 	try:
 		frames = sample_images(video_path, num_frames_to_sample)

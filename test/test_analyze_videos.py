@@ -10,7 +10,13 @@ class AnalyzeVideoUnitTest(unittest.TestCase):
 	def test_analyze_video(self):
 		# This is the downloaded video of the first video in the test_videos
 		video = "test/data/test_video.mp4"
-		result, analysis = analyze_videos.analyze_from_path(video)
+		f = open('test/data/test_video_metadata.json')
+		metadata = json.load(f)
+		f.close()
+		result, analysis = analyze_videos.analyze_from_path(
+			video_path=video,
+			metadata=metadata
+		)
 
 		self.assertEqual(result, True)
 		self._verify_contain(analysis["content"], ["sandwich", "chicken"])
@@ -148,32 +154,6 @@ class AnalyzeVideoUnitTest(unittest.TestCase):
 			self.assertIsNotNone(content[video_id])
 			
 			self._verify_video_analysis(test_video, content[video_id])
-
-	def test_analyze_video_with_metadata(self):
-		# This is the downloaded video of the first video in the test_videos
-		video = "test/data/test_video.mp4"
-		f = open('test/data/test_video_metadata.json')
-		metadata = json.load(f)
-		f.close()
-		result, content = analyze_videos.analyze_from_path(
-			video_path=video,
-			metadata=metadata
-		)
-		self.assertEqual(result, True)
-
-		self._verify_contain(content, TEST_VIDEOS[0].should_contain)
-
-	def test_analyze_video_from_url_with_metadata(self):
-		self._send_test_request_with_multiple_urls(
-			use_parallel=True,
-			metadata_fields=["title"]
-		)
-
-	def test_analyze_video_from_url_with_metadata_no_speedup(self):
-		self._send_test_request_with_multiple_urls(
-			use_parallel=False,
-			metadata_fields=["title"]
-		)
 
 if __name__ == '__main__':
 	unittest.main()

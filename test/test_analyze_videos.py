@@ -3,17 +3,17 @@ from function import analyze_videos
 import json
 from . import helper
 
-test_videos: list[helper.VideoAnalysisTestObject] = helper.get_test_video_urls()
+TEST_VIDEOS: list[helper.VideoAnalysisTestObject] = helper.get_test_video_urls()
 
 class AnalyzeVideoUnitTest(unittest.TestCase):
 	
 	def test_analyze_video(self):
+		# This is the downloaded video of the first video in the test_videos
 		video = "test/data/test_video.mp4"
 		result, content = analyze_videos.analyze_from_path(video)
 
 		self.assertEqual(result, True)
-		self.assertTrue("video" in content)
-		self.assertTrue("sandwich" in content)
+		self._verify_contain(content, TEST_VIDEOS[0].should_contain)
 
 	def test_analyze_video_dne(self):
 		video = "test/data/dne.mp4"
@@ -53,7 +53,7 @@ class AnalyzeVideoUnitTest(unittest.TestCase):
 			f"https://www.tiktok.com/{ video_user }/video/{ video_id }"
 		)
 
-	def _verify_contain(self, content: str, should_contains: list[list[str]]) -> bool:
+	def _verify_contain(self, content: str, should_contains: list[list[str]]):
 		"""
 			Private function to verify that the given content contain things that
 			are in the list of should_contains.
@@ -81,12 +81,9 @@ class AnalyzeVideoUnitTest(unittest.TestCase):
 				if should_contain in content:
 					break
 				self.fail(f"\"{ content }\" does not have one of the required { should_contain_list }")
-				return False
-			
-		return True
 
 	def test_analyze_video_from_url(self):
-		test_vid = test_videos[0]
+		test_vid = TEST_VIDEOS[0]
 		video_user = test_vid.user
 		video_id = test_vid.id
 		url = f"https://www.tiktok.com/{ video_user }/video/{ video_id }?lang=en"
@@ -122,19 +119,23 @@ class AnalyzeVideoUnitTest(unittest.TestCase):
 
 	@unittest.skip("Sequential version, here for debugging purpose only")
 	def test_analyze_video_from_multiple_urls_no_speedup(self):
-		self._send_test_request_with_multiple_urls(use_parallel=False)
+		self._send_test_request_with_multiple_urls(use_parallel=False, metadata_fields=["title"])
 
 	def test_analyze_video_from_multiple_urls_speedup(self):
-		self._send_test_request_with_multiple_urls(use_parallel=True)
+		self._send_test_request_with_multiple_urls(use_parallel=True, metadata_fields=["title"])
 
-	def _send_test_request_with_multiple_urls(self, use_parallel: bool):
+	def _send_test_request_with_multiple_urls(self, use_parallel: bool, metadata_fields: list[str]):
 		test_videos: list[helper.VideoAnalysisTestObject] = helper.get_test_video_urls()
 
 		urls = []
 		for test_video in test_videos:
 			urls.append(test_video.get_video_url())
 		
-		result, content = analyze_videos.analyze_from_urls(urls, use_parallel=use_parallel)
+		result, content = analyze_videos.analyze_from_urls(
+			urls,
+			metadata_fields=metadata_fields,
+			use_parallel=use_parallel
+		)
 
 		self.assertTrue(result)
 
@@ -142,14 +143,11 @@ class AnalyzeVideoUnitTest(unittest.TestCase):
 			video_id = test_video.id
 			self.assertIn(video_id, content)
 			self.assertIsNotNone(content[video_id])
-
-			analysis = content[video_id]
-
-			# Test quality of analysis
-			for should_contain in test_video.should_contain:
-				self.assertIn(should_contain, analysis)
+			
+			self._verify_video_analysis(test_video, content[video_id])
 
 	def test_analyze_video_with_metadata(self):
+		# This is the downloaded video of the first video in the test_videos
 		video = "test/data/test_video.mp4"
 		f = open('test/data/test_video_metadata.json')
 		metadata = json.load(f)
@@ -158,64 +156,20 @@ class AnalyzeVideoUnitTest(unittest.TestCase):
 			video_path=video,
 			metadata=metadata
 		)
-
 		self.assertEqual(result, True)
-		self.assertTrue("video" in content)
-		self.assertTrue("sandwich" in content)
-		self.assertTrue("Mama" in content)
-		self.assertTrue("Too" in content)
-		self.assertTrue(
-			"New York" in content
-			or "NYC" in content
-		)
+
+		self._verify_contain(content, TEST_VIDEOS[0].should_contain)
 
 	def test_analyze_video_from_url_with_metadata(self):
-		video_id = "7273630854000364846"
-		url = f"https://www.tiktok.com/@jacksdiningroom/video/{video_id}?lang=en"
-		result, content = analyze_videos.analyze_from_urls(
-			[url],
+		self._send_test_request_with_multiple_urls(
+			use_parallel=True,
 			metadata_fields=["title"]
 		)
 
-		self.assertTrue(result)
-		self.assertIn(video_id, content)
-		self.assertIsNotNone(content[video_id])
-
-		analysis = content[video_id]
-
-		self.assertEqual(result, True)
-		self.assertTrue("video" in analysis)
-		self.assertTrue("sandwich" in analysis)
-		self.assertTrue("Mama" in analysis)
-		self.assertTrue("Too" in analysis)
-		self.assertTrue(
-			"New York" in analysis
-			or "NY" in analysis
-		)
-
 	def test_analyze_video_from_url_with_metadata_no_speedup(self):
-		video_id = "7273630854000364846"
-		url = f"https://www.tiktok.com/@jacksdiningroom/video/{video_id}?lang=en"
-		result, content = analyze_videos.analyze_from_urls(
-			[url],
-			metadata_fields=["title"],
-			use_parallel=False
-		)
-
-		self.assertTrue(result)
-		self.assertIn(video_id, content)
-		self.assertIsNotNone(content[video_id])
-
-		analysis = content[video_id]
-
-		self.assertEqual(result, True)
-		self.assertTrue("video" in analysis)
-		self.assertTrue("sandwich" in analysis)
-		self.assertTrue("Mama" in analysis)
-		self.assertTrue("Too" in analysis)
-		self.assertTrue(
-			"New York" in analysis
-			or "NY" in analysis
+		self._send_test_request_with_multiple_urls(
+			use_parallel=False,
+			metadata_fields=["title"]
 		)
 
 if __name__ == '__main__':

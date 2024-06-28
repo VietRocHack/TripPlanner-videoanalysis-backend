@@ -7,55 +7,6 @@ from aiohttp import ClientSession
 TEST_VIDEOS: list[helper.VideoAnalysisTestObject] = helper.get_test_video_urls()
 
 class AnalyzeVideoUnitTest(unittest.IsolatedAsyncioTestCase):
-	
-	async def test_analyze_video(self):
-		# This is the downloaded video of the first video in the test_videos
-		video = "test/data/test_video.mp4"
-		f = open('test/data/test_video_metadata.json')
-		metadata = json.load(f)
-		f.close()
-
-		result, analysis = await self._analyze_from_path(
-			video_path=video,
-			metadata=metadata
-		)
-		print(analysis)
-		self.assertEqual(result, True)
-		self._verify_contain(analysis["content"], ["sandwich", "chicken"])
-
-	def test_analyze_video_dne(self):
-		video = "test/data/dne.mp4"
-		result, content = self._analyze_from_path(video)
-
-		self.assertEqual(result, False)
-		self.assertEqual(content, "Failed to load video")
-
-	def test_sample_images(self):
-		video = "test/data/test_video.mp4"
-		num_frames_to_sample = 10
-		result = analyze_videos.sample_images(video, num_frames_to_sample)
-
-		self.assertEqual(len(result), num_frames_to_sample)
-
-	async def _analyze_from_path(
-			self,
-			video_path: str,
-			num_frames_to_sample: int = 5,
-			metadata: dict[str, str] = {}
-		):
-		"""
-			Helper function to run analyze_videos.analyze_from_path since it needs a
-			ClientSession. TODO: there's probably better way to do this...
-		"""
-		async with ClientSession() as session:
-			result, analysis = await analyze_videos.analyze_from_path(
-				session,
-				video_path,
-				num_frames_to_sample,
-				metadata
-			)
-
-			return result, analysis
 
 	def _verify_video_analysis(
 			self,
@@ -113,6 +64,76 @@ class AnalyzeVideoUnitTest(unittest.IsolatedAsyncioTestCase):
 			if not is_good:
 				self.fail(f"\"{ content }\" does not have one of the required { should_contain_list }")
 
+	def _send_test_request_with_multiple_urls(self, use_parallel: bool, metadata_fields: list[str]):
+		test_videos: list[helper.VideoAnalysisTestObject] = helper.get_test_video_urls()
+
+		urls = []
+		for test_video in test_videos:
+			urls.append(test_video.get_video_url())
+		
+		result, content = analyze_videos.analyze_from_urls(
+			urls,
+			metadata_fields=metadata_fields,
+			use_parallel=use_parallel
+		)
+
+		self.assertTrue(result)
+
+		for test_video in test_videos:
+			video_id = test_video.id
+			self.assertIn(video_id, content)
+			self.assertIsNotNone(content[video_id])
+			
+			self._verify_video_analysis(test_video, content[video_id])
+
+	async def test_analyze_video(self):
+		# This is the downloaded video of the first video in the test_videos
+		video = "test/data/test_video.mp4"
+		f = open('test/data/test_video_metadata.json')
+		metadata = json.load(f)
+		f.close()
+
+		result, analysis = await self._analyze_from_path(
+			video_path=video,
+			metadata=metadata
+		)
+		print(analysis)
+		self.assertEqual(result, True)
+		self._verify_contain(analysis["content"], ["sandwich", "chicken"])
+
+	def test_analyze_video_dne(self):
+		video = "test/data/dne.mp4"
+		result, content = self._analyze_from_path(video)
+
+		self.assertEqual(result, False)
+		self.assertEqual(content, "Failed to load video")
+
+	def test_sample_images(self):
+		video = "test/data/test_video.mp4"
+		num_frames_to_sample = 10
+		result = analyze_videos.sample_images(video, num_frames_to_sample)
+
+		self.assertEqual(len(result), num_frames_to_sample)
+
+	async def _analyze_from_path(
+			self,
+			video_path: str,
+			num_frames_to_sample: int = 5,
+			metadata: dict[str, str] = {}
+		):
+		"""
+			Helper function to run analyze_videos.analyze_from_path since it needs a
+			ClientSession. TODO: there's probably better way to do this...
+		"""
+		async with ClientSession() as session:
+			result, analysis = await analyze_videos.analyze_from_path(
+				session,
+				video_path,
+				num_frames_to_sample,
+				metadata
+			)
+
+			return result, analysis
 	def test_analyze_video_from_url(self):
 		test_vid = TEST_VIDEOS[0]
 		video_user = test_vid.user
@@ -154,28 +175,6 @@ class AnalyzeVideoUnitTest(unittest.IsolatedAsyncioTestCase):
 
 	def test_analyze_video_from_multiple_urls_speedup(self):
 		self._send_test_request_with_multiple_urls(use_parallel=True, metadata_fields=["title"])
-
-	def _send_test_request_with_multiple_urls(self, use_parallel: bool, metadata_fields: list[str]):
-		test_videos: list[helper.VideoAnalysisTestObject] = helper.get_test_video_urls()
-
-		urls = []
-		for test_video in test_videos:
-			urls.append(test_video.get_video_url())
-		
-		result, content = analyze_videos.analyze_from_urls(
-			urls,
-			metadata_fields=metadata_fields,
-			use_parallel=use_parallel
-		)
-
-		self.assertTrue(result)
-
-		for test_video in test_videos:
-			video_id = test_video.id
-			self.assertIn(video_id, content)
-			self.assertIsNotNone(content[video_id])
-			
-			self._verify_video_analysis(test_video, content[video_id])
 
 if __name__ == '__main__':
 	unittest.main()

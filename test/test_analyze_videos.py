@@ -2,24 +2,26 @@ import unittest
 from function import analyze_videos
 import json
 from . import helper
+from aiohttp import ClientSession
 
 TEST_VIDEOS: list[helper.VideoAnalysisTestObject] = helper.get_test_video_urls()
 
-class AnalyzeVideoUnitTest(unittest.TestCase):
+class AnalyzeVideoUnitTest(unittest.IsolatedAsyncioTestCase):
 	
-	def test_analyze_video(self):
+	async def test_analyze_video(self):
 		# This is the downloaded video of the first video in the test_videos
 		video = "test/data/test_video.mp4"
 		f = open('test/data/test_video_metadata.json')
 		metadata = json.load(f)
 		f.close()
-		result, analysis = analyze_videos.analyze_from_path(
-			video_path=video,
-			metadata=metadata
-		)
-
-		self.assertEqual(result, True)
-		self._verify_contain(analysis["content"], ["sandwich", "chicken"])
+		async with ClientSession() as session:
+			result, analysis = await analyze_videos.analyze_from_path(
+				session=session,
+				video_path=video,
+				metadata=metadata
+			)
+			self.assertEqual(result, True)
+			self._verify_contain(analysis["content"], ["sandwich", "chicken"])
 
 	def test_analyze_video_dne(self):
 		video = "test/data/dne.mp4"

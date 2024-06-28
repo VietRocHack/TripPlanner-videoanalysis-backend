@@ -8,6 +8,7 @@ import json
 import logging
 from function import utils
 import time
+from aiohttp import ClientSession, ClientError
 
 openai_request_logger = utils.setup_logger(__name__, f"../logs/openai_request_logger_{int(time.time())}.log")
 
@@ -16,7 +17,11 @@ load_dotenv()
 with open("./function/openai_analysis_json_template.txt") as f:
 	analysis_template = f.read()
 
-def analyze_images(images: list, metadata: dict[str, str] = {}) -> dict:
+async def analyze_images(
+		session: ClientSession,
+		images: list,
+		metadata: dict[str, str] = {}
+	) -> dict:
 	# Convert the image to JPG format
 	# Convert the images to JPG format
 	base_64_list = []
@@ -61,12 +66,28 @@ def analyze_images(images: list, metadata: dict[str, str] = {}) -> dict:
 		"max_tokens": 200
 	}
 
-	response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
+	try:
+		async with session.post(
+			url="https://api.openai.com/v1/chat/completions",
+			json=payload,
+			headers=headers
+		) as response:
+			response_json = await response.json()
 
-	openai_request_logger.info(f"Reponse received from OpenAI: {response.text}")
+			openai_request_logger.info(
+				f"Reponse received from OpenAI with code {response.status}: {json.dumps(response_json)}"
+			)
 
-	analysis_raw = response.json()["choices"][0]["message"]["content"]
+			analysis_raw = response_json["choices"][0]["message"]["content"]
 
-	analysis_json = json.loads(analysis_raw)
+			analysis_json = json.loads(analysis_raw)
+			return analysis_json
 
-	return analysis_json
+	except ClientError as e:
+		openai_request_logger.error(f"ClientError durnig requesting OpenAI: {e}")
+		return {}
+	
+	except Exception as e:
+		openai_request_logger.error(f"Some happended during requesting OpenAI: {e}")
+		return {}
+

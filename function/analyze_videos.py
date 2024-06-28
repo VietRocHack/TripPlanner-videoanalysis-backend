@@ -2,8 +2,9 @@ import cv2
 from function import openai_request 
 from yt_dlp import YoutubeDL
 from urllib.parse import urlparse
-import threading
 from dataclasses import dataclass
+from aiohttp import ClientSession
+import asyncio
 
 # YoutubeDL options to set output filename to vid-{id} and put it in dl folder
 ydl_opts = {
@@ -22,10 +23,9 @@ class _TikTokVideoObject:
 	def get_clean_url(self) -> str:
 		return f"https://www.tiktok.com/{ self.user }/video/{ self.id }"
 
-def analyze_from_urls(
+async def analyze_from_urls(
 		video_urls: list[str],
 		num_frames_to_sample: int = 5,
-		use_parallel: bool = True, # use parallel running by default
 		metadata_fields: list[str] = [] # supports "title", [more to be added]
 	) -> tuple[bool, dict[str, str]]:
 	# mapping: {video_id: analysis}
@@ -58,46 +58,24 @@ def analyze_from_urls(
 	video_ids = video_objects.keys()
 
 	# Use async to speed up requests from open_ai
-	if use_parallel:
-		threads = []
-		results = {}
-		for video_id in video_ids:
-			print(f"Analyzing {video_id}")
-			thread = threading.Thread(
-				target=lambda vid_obj: results.update(
-					{vid_obj.id: analyze_from_path(
-						vid_obj.path,
-						num_frames_to_sample,
-						vid_obj.metadata
-					)}
-				),
-				args=(video_objects[video_id],)
-			)
-			threads.append(thread)
-			thread.start()
-
-		for thread in threads:
-			thread.join()
-
-		# Verify video analysis results is correct before returning
-		for video_id, (result, data) in results.items():
-			if result == True:
-				vid_obj = video_objects[video_id]
-				data["video_url"] = vid_obj.get_clean_url()
-				video_analysis[video_id] = data
-			else:
-				return False, f"Error happens during analyzing video id {video_id}: {data}"
-			
-	else:
-		# sequential calls to open_ai, mostly here for testing purposes
+	async with ClientSession() as session:
+		tasks = []
 		for video_id in video_ids:
 			print(f"Analyzing {video_id}")
 			vid_obj = video_objects[video_id]
-			result, data = analyze_from_path(
-				vid_obj.path,
-				num_frames_to_sample,
-				vid_obj.metadata
+			tasks.append(
+				analyze_from_path(
+					session=session,
+					video_path=vid_obj.path,
+					num_frames_to_sample=num_frames_to_sample,
+					metadata=vid_obj.metadata
+				)
 			)
+
+		results = await asyncio.gather(tasks)
+
+		# Verify video analysis results is correct before returning
+		for result, data in results:
 			if result == True:
 				vid_obj = video_objects[video_id]
 				data["video_url"] = vid_obj.get_clean_url()
@@ -105,9 +83,10 @@ def analyze_from_urls(
 			else:
 				return False, f"Error happens during analyzing video id {video_id}: {data}"
 
-	return True, video_analysis
+		return True, video_analysis
 
-def analyze_from_path(
+async def analyze_from_path(
+		session: ClientSession,
 		video_path: str,
 		num_frames_to_sample: int = 5,
 		metadata: dict[str, str] = {}
@@ -121,7 +100,13 @@ def analyze_from_path(
 	except Exception as e:
 		return (False, str(e))
 
-	return (True, openai_request.analyze_images(frames, metadata=metadata))
+	analysis = await openai_request.analyze_images(
+			session=session,
+			images=frames,
+			metadata=metadata
+		)
+
+	return (True, analysis)
 
 def download_single_video(video_url: str, metadata_fields: dict[str, str] = []):
 	"""

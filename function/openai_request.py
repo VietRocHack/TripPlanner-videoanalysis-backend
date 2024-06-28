@@ -53,7 +53,7 @@ def analyze_images(images: list, metadata: dict[str, str] = {}) -> dict:
 				"content": content
 			}
 		],
-		"max_tokens": 400
+		"max_tokens": 200
 	}
 
 	response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)

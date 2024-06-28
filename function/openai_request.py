@@ -5,6 +5,11 @@ import base64
 from dotenv import load_dotenv
 import os
 import json
+import logging
+from function import utils
+import time
+
+openai_request_logger = utils.setup_logger(__name__, f"../logs/openai_request_logger_{int(time.time())}.log")
 
 load_dotenv()
 
@@ -57,6 +62,8 @@ def analyze_images(images: list, metadata: dict[str, str] = {}) -> dict:
 	}
 
 	response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
+
+	openai_request_logger.info(f"Reponse received from OpenAI: {response.text}")
 
 	analysis_raw = response.json()["choices"][0]["message"]["content"]
 

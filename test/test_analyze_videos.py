@@ -86,6 +86,27 @@ class AnalyzeVideoUnitTest(unittest.IsolatedAsyncioTestCase):
 			
 			self._verify_video_analysis(test_video, content[video_id])
 
+	async def _analyze_from_path(
+			self,
+			video_path: str,
+			num_frames_to_sample: int = 5,
+			metadata: dict[str, str] = {}
+		):
+		"""
+			Helper function to run analyze_videos.analyze_from_path since it needs a
+			ClientSession. TODO: there's probably better way to do this...
+		"""
+		async with ClientSession() as session:
+			result, analysis = await analyze_videos.analyze_from_path(
+				session,
+				video_path,
+				num_frames_to_sample,
+				metadata
+			)
+
+			return result, analysis
+
+
 	async def test_analyze_video(self):
 		# This is the downloaded video of the first video in the test_videos
 		video = "test/data/test_video.mp4"
@@ -115,25 +136,6 @@ class AnalyzeVideoUnitTest(unittest.IsolatedAsyncioTestCase):
 
 		self.assertEqual(len(result), num_frames_to_sample)
 
-	async def _analyze_from_path(
-			self,
-			video_path: str,
-			num_frames_to_sample: int = 5,
-			metadata: dict[str, str] = {}
-		):
-		"""
-			Helper function to run analyze_videos.analyze_from_path since it needs a
-			ClientSession. TODO: there's probably better way to do this...
-		"""
-		async with ClientSession() as session:
-			result, analysis = await analyze_videos.analyze_from_path(
-				session,
-				video_path,
-				num_frames_to_sample,
-				metadata
-			)
-
-			return result, analysis
 	def test_analyze_video_from_url(self):
 		test_vid = TEST_VIDEOS[0]
 		video_user = test_vid.user

@@ -3,7 +3,10 @@ from function import analyze_videos
 import json
 from . import helper
 
+test_videos: list[helper.VideoAnalysisTestObject] = helper.get_test_video_urls()
+
 class AnalyzeVideoUnitTest(unittest.TestCase):
+	
 	def test_analyze_video(self):
 		video = "test/data/test_video.mp4"
 		result, content = analyze_videos.analyze_from_path(video)
@@ -26,9 +29,66 @@ class AnalyzeVideoUnitTest(unittest.TestCase):
 
 		self.assertEqual(len(result), num_frames_to_sample)
 
+	def _verify_video_analysis(
+			self,
+			test_vid: helper.VideoAnalysisTestObject,
+			analysis: dict
+		):
+		video_user = test_vid.user
+		video_id = test_vid.id
+
+		self.assertIn("content", analysis)
+		self.assertIn("location", analysis)
+		self.assertIn("video_url", analysis)
+
+		# verify content
+		self._verify_contain(analysis["content"], test_vid.should_contain["content"])
+
+		# verify location
+		self._verify_contain(analysis["location"], test_vid.should_contain["location"])
+
+		# verify url
+		self.assertEqual(
+			analysis["video_url"],
+			f"https://www.tiktok.com/{ video_user }/video/{ video_id }"
+		)
+
+	def _verify_contain(self, content: str, should_contains: list[list[str]]) -> bool:
+		"""
+			Private function to verify that the given content contain things that
+			are in the list of should_contains.
+			should_contains is formatted as a list of should_contain_list,
+			where each should_contain_list has a number of words. The word ideally
+			should be in the same category. 
+			
+			The satisfaction criteria is:
+			- content must have at least one of the word in the should_contain_list.
+			- content must satisfy all the should_contain_list in the should_contains.
+			
+			Example:
+			should_contains = [["New York", "NY"], ["US", "United States"]]
+
+			content #1: New York, US => accepted
+			content #2: NY, US => accepted
+			content #3: New Jersey, US => not accepted
+			content #4: United States => not accepted
+		"""
+
+		for should_contain_list in should_contains:
+			# content must satisfy all the should_contain_list in the should_contains.
+			for should_contain in should_contain_list:
+				# content must have at least one of the word in the should_contain_list
+				if should_contain in content:
+					break
+				self.fail(f"\"{ content }\" does not have one of the required { should_contain_list }")
+				return False
+			
+		return True
+
 	def test_analyze_video_from_url(self):
-		video_user = "@jacksdiningroom"
-		video_id = "7273630854000364846"
+		test_vid = test_videos[0]
+		video_user = test_vid.user
+		video_id = test_vid.id
 		url = f"https://www.tiktok.com/{ video_user }/video/{ video_id }?lang=en"
 		result, data = analyze_videos.analyze_from_urls([url], metadata_fields=["title"])
 
@@ -36,33 +96,8 @@ class AnalyzeVideoUnitTest(unittest.TestCase):
 		self.assertIn(video_id, data)
 		self.assertIsNotNone(data[video_id])
 
-		# verify fields in analysis
-		analysis = data[video_id]
-		self.assertIn("content", analysis)
-		self.assertIn("location", analysis)
-		self.assertIn("video_url", analysis)
-
-		# verify content
-		content = analysis["content"]
-		self.assertIn("sandwich", content)
-
-		# verify location
-		location = analysis["location"]
-		self.assertTrue(
-			"New York" in location
-			or "NY" in location
-		)
-		self.assertTrue(
-			"US" in location
-			or "United States" in location
-		)
-
-		# verify url
-		response_video_url = analysis["video_url"]
-		self.assertEqual(
-			response_video_url,
-			f"https://www.tiktok.com/{ video_user }/video/{ video_id }"
-		)
+		# verify analysis of video
+		self._verify_video_analysis(test_vid, data[video_id])
 
 	def test_invalid_url_not_from_tiktok(self):
 		url = "https://www.youtube.com"
@@ -104,7 +139,7 @@ class AnalyzeVideoUnitTest(unittest.TestCase):
 		self.assertTrue(result)
 
 		for test_video in test_videos:
-			video_id = test_video.video_id
+			video_id = test_video.id
 			self.assertIn(video_id, content)
 			self.assertIsNotNone(content[video_id])
 

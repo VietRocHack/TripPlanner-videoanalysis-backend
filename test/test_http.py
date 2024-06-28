@@ -44,7 +44,7 @@ class HttpTest(unittest.TestCase):
 			# checking for analysis
 			content = response_data["video_analysis"]
 			for test_video in test_videos:
-				video_id = test_video.video_id
+				video_id = test_video.id
 				self.assertIn(video_id, content)
 				self.assertIsNotNone(content[video_id])
 

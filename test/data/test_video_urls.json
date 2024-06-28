@@ -3,7 +3,8 @@
 		"user": "@jacksdiningroom",
 		"video_id": "7273630854000364846",
 		"should_contain": {
-      "content": ["sandwich"]
+      "content": [["Mama", "Too"], ["sandwich", "chicken"]],
+      "location": [["New York", "NY"], ["US", "United States"]]
     }
 	},
 	{

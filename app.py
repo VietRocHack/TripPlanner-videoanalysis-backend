@@ -13,7 +13,7 @@ client = OpenAI()
 
 model = "gpt-3.5-turbo"
 
-USE_PARALLEL = True
+USE_PARALLEL = False
 
 @app.route("/")
 def index():

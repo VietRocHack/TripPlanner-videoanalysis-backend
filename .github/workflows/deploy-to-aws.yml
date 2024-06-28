@@ -47,7 +47,7 @@ jobs:
 
     - name: Clean hosting folder & create log directory (if dne)
       run: |
-        rm -rf $HOSTIN_DIR
+        rm -rf $HOSTING_DIR
         mkdir -p $HOSTING_DIR
         mkdir -p $LOG_DIR
 

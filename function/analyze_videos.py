@@ -59,29 +59,35 @@ async def analyze_from_urls(
 
 	# Use async to speed up requests from open_ai
 	async with ClientSession() as session:
+		# TODO: there's probably better way to manage this but idfk
 		tasks = []
+		task_ids = []
 		for video_id in video_ids:
 			print(f"Analyzing {video_id}")
 			vid_obj = video_objects[video_id]
+			task_ids.append(video_id)
 			tasks.append(
 				analyze_from_path(
 					session=session,
 					video_path=vid_obj.path,
-					num_frames_to_sample=num_frames_to_sample,
+					num_frames_to_sample=1,
 					metadata=vid_obj.metadata
 				)
 			)
+		results = await asyncio.gather(*tasks)
 
-		results = await asyncio.gather(tasks)
-
-		# Verify video analysis results is correct before returning
-		for result, data in results:
+		# post-process results here
+		for i in range(len(video_ids)):
+			video_id = task_ids[i]
+			result, data = results[i]
 			if result == True:
+				# True if result succeeds
 				vid_obj = video_objects[video_id]
 				data["video_url"] = vid_obj.get_clean_url()
 				video_analysis[video_id] = data
 			else:
-				return False, f"Error happens during analyzing video id {video_id}: {data}"
+				# False if some shit happens TODO: Log something here
+				video_analysis[video_id] = {"error": "Error when analyzing"}
 
 		return True, video_analysis
 

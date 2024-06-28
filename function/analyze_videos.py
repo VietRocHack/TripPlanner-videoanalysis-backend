@@ -70,7 +70,7 @@ async def analyze_from_urls(
 				analyze_from_path(
 					session=session,
 					video_path=vid_obj.path,
-					num_frames_to_sample=1,
+					num_frames_to_sample=num_frames_to_sample,
 					metadata=vid_obj.metadata
 				)
 			)

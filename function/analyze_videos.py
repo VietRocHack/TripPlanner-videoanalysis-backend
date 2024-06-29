@@ -33,78 +33,90 @@ async def analyze_from_urls(
 		metadata_fields: list[str] = [] # supports "title", [more to be added]
 	) -> tuple[bool, dict[str, str]]:
 	"""
-		Takes in a list of TikTok video_urls, an positive integer of frames to sample
-		and metadata fields and process them to get video analysis for each of the
-		videos.
+		Helper functions for analyze_from_url, adds ClientSession
 	"""
 	# mapping: {video_id: analysis}
-	cur_time = int(time.time())
-	logger.info(f"[{ cur_time }] Analyzing with { num_frames_to_sample } frames with metatdata { metadata_fields }: { video_urls }")
-	video_analysis: dict[str, dict[str: str]] = {}
-	video_objects: dict[str, _TikTokVideoObject] = {}
+	logger.info(f"Analyzing with { num_frames_to_sample } frames with metatdata { metadata_fields }: { video_urls }")
 
-	for url in video_urls:
-		parsed_url = urlparse(url)
-		if "tiktok.com" not in parsed_url.hostname:
-			logger.info(f"[{ cur_time }] Invalid TikTok URL - bad hostname: { url }")
-			return False, "One or more video URLs are not from TikTok."
-		paths = parsed_url.path.split("/")
-		if len(paths) < 4:
-			logger.info(f"[{ cur_time }] Invalid TikTok URL - bad format: { url }")
-			return False, "Invalid TikTok video URL."
-
-		try:
-			metadata = download_single_video(url, metadata_fields=metadata_fields)
-		except Exception:
-			logger.info(f"[{ cur_time }] Unable to download: { url }")
-			return False, "Something happens during downloading video."
-
-		# If successfully downloaded, then keep data organized in one dataclass obj
-		video_id = paths[3]
-		video_objects[video_id] = _TikTokVideoObject(
-			id=video_id,
-			user=paths[1],
-			path=f'dl/vid-{video_id}.mp4',
-			metadata=metadata
-		)
-
-
-	video_ids = video_objects.keys()
+	# Returns a list of dictionary that contains the analysis of each video
+	# in the given video_urls
+	video_analysis: list[dict] = []
 
 	# Use async to speed up requests from open_ai
 	async with ClientSession() as session:
 		# TODO: there's probably better way to manage this but idfk
 		tasks = []
-		task_ids = []
-		for video_id in video_ids:
-			logger.info(f"[{ cur_time }] Analyzing: { video_id }")
-			vid_obj = video_objects[video_id]
-			task_ids.append(video_id)
+		for video_url in video_urls:
+			logger.info(f"Analyzing: { video_url }")
 			tasks.append(
-				analyze_from_path(
+				analyze_from_url(
 					session=session,
-					video_path=vid_obj.path,
+					video_url=video_url,
 					num_frames_to_sample=num_frames_to_sample,
-					metadata=vid_obj.metadata
+					metadata_fields=metadata_fields
 				)
 			)
 		results = await asyncio.gather(*tasks)
 
-		# post-process results here
-		for i in range(len(video_ids)):
-			video_id = task_ids[i]
-			result, data = results[i]
-			if result == True:
-				logger.info(f"[{ cur_time }] Finished analyzing { video_id }, result: { data }")
-				# True if result succeeds
-				vid_obj = video_objects[video_id]
-				data["video_url"] = vid_obj.get_clean_url()
-				video_analysis[video_id] = data
-			else:
-				logger.error(f"[{ cur_time }] Error when analyzing: { video_id }")
-				video_analysis[video_id] = {"error": "Error when analyzing"}
+		for _, analysis in results:
+			video_analysis.append(analysis)
 
 		return True, video_analysis
+
+async def analyze_from_url(
+		session: ClientSession,
+		video_url: str,
+		num_frames_to_sample: int = 5,
+		metadata_fields: list[str] = []
+) -> tuple[bool, dict]:
+	"""
+		Takes in an url of a video, a positive integer of frames to sample and
+		metadata fields and process them to get video analysis for each of the
+		videos.
+	"""
+	# Checking for validity of url
+	parsed_url = urlparse(video_url)
+	if "tiktok.com" not in parsed_url.hostname:
+		logger.info(f"Invalid TikTok URL - bad hostname: { video_url }")
+		return False, {"error": "One or more video URLs are not from TikTok."}
+	paths = parsed_url.path.split("/")
+	if len(paths) < 4:
+		logger.info(f"Invalid TikTok URL - bad format: { video_url }")
+		return False, {"error": "Invalid TikTok video URL."}
+
+	# Download video from url
+	try:
+		metadata = download_single_video(video_url, metadata_fields=metadata_fields)
+	except Exception:
+		logger.info(f"Unable to download: { video_url }")
+		return False, {"error": "Something happens during downloading video."}
+
+	# If successfully downloaded, then keep data organized in one dataclass obj
+	video_id = paths[3]
+	vid_obj = _TikTokVideoObject(
+		id=video_id,
+		user=paths[1],
+		path=f'dl/vid-{video_id}.mp4',
+		metadata=metadata
+	)
+
+	# Start analyzing process 
+	result, data = await analyze_from_path(
+		session,
+		vid_obj.path,
+		num_frames_to_sample,
+		vid_obj.metadata
+	)
+
+	# Post-process result
+	if result == True:
+		logger.info(f"Finished analyzing { video_id }, result: { data }")
+		# True if result succeeds
+		data["video_url"] = vid_obj.get_clean_url()
+		return True, data
+	else:
+		logger.error(f"Error when analyzing: { video_id }")
+		return False, {"error": "Error when analyzing"}
 
 async def analyze_from_path(
 		session: ClientSession,

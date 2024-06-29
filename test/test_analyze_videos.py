@@ -143,11 +143,10 @@ class AnalyzeVideoUnitTest(unittest.IsolatedAsyncioTestCase):
 
 		# verify result
 		self.assertTrue(result)
-		self.assertIn(video_id, data)
-		self.assertIsNotNone(data[video_id])
+		self.assertGreater(len(data), 0)
 
 		# verify analysis of video
-		self._verify_video_analysis(test_vid, data[video_id])
+		self._verify_video_analysis(test_vid, data[0])
 
 	async def test_invalid_url_not_from_tiktok(self):
 		url = "https://www.youtube.com"

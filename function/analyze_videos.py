@@ -33,7 +33,9 @@ async def analyze_from_urls(
 		metadata_fields: list[str] = [] # supports "title", [more to be added]
 	) -> tuple[bool, dict[str, str]]:
 	"""
-		Helper functions for analyze_from_url, adds ClientSession
+		Helper functions for analyze_from_url. Returns True if every video is
+		finished analyzing successfully, returns False if one or more video has
+		problem analyzing
 	"""
 	# mapping: {video_id: analysis}
 	logger.info(f"Analyzing with { num_frames_to_sample } frames with metatdata { metadata_fields }: { video_urls }")
@@ -58,10 +60,13 @@ async def analyze_from_urls(
 			)
 		results = await asyncio.gather(*tasks)
 
-		for _, analysis in results:
+		overall_result = True
+
+		for result, analysis in results:
+			overall_result &= result
 			video_analysis.append(analysis)
 
-		return True, video_analysis
+		return overall_result, video_analysis
 
 async def analyze_from_url(
 		session: ClientSession,

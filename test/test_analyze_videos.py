@@ -153,21 +153,21 @@ class AnalyzeVideoUnitTest(unittest.IsolatedAsyncioTestCase):
 		result, content = await analyze_videos.analyze_from_urls([url])
 
 		self.assertFalse(result)
-		self.assertEqual(content, "One or more video URLs are not from TikTok.")
+		self.assertEqual(content, [{"error": "One or more video URLs are not from TikTok."}])
 
 	async def test_invalid_url_invalid_download_link(self):
 		url = "https://www.tiktok.com/@jacksdiningroom/video"
 		result, content = await analyze_videos.analyze_from_urls([url])
 
 		self.assertFalse(result)
-		self.assertEqual(content, "Invalid TikTok video URL.")
+		self.assertEqual(content, [{"error": "Invalid TikTok video URL."}])
 
 	async def test_invalid_url_bad_download_link(self):
 		url = "https://www.tiktok.com/@jacksdiningroom/video/gibberish"
 		result, content = await analyze_videos.analyze_from_urls([url])
 
 		self.assertFalse(result)
-		self.assertEqual(content, "Something happens during downloading video.")
+		self.assertEqual(content, [{"error": "Something happens during downloading video."}])
 
 	async def test_analyze_video_from_multiple_urls(self):
 		await self._send_test_request_with_multiple_urls(metadata_fields=["title"])

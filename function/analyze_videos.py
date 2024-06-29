@@ -32,6 +32,11 @@ async def analyze_from_urls(
 		num_frames_to_sample: int = 5,
 		metadata_fields: list[str] = [] # supports "title", [more to be added]
 	) -> tuple[bool, dict[str, str]]:
+	"""
+		Takes in a list of TikTok video_urls, an positive integer of frames to sample
+		and metadata fields and process them to get video analysis for each of the
+		videos.
+	"""
 	# mapping: {video_id: analysis}
 	cur_time = int(time.time())
 	logger.info(f"[{ cur_time }] Analyzing with { num_frames_to_sample } frames with metatdata { metadata_fields }: { video_urls }")
@@ -137,7 +142,9 @@ def download_videos(
 		metadata_fields: dict[str, str] = []
 	) -> list[dict[str, str]]:
 	"""
-		Returns a list of metadata object that is filtered by the given metadata_fields
+		Downloads the video in the given list of urls in video_urls.
+		Also returns a list of metadata object that is filtered by the given
+		metadata_fields
 	"""
 	metadata_list = []
 	with YoutubeDL(ydl_opts) as ydl:
@@ -155,6 +162,9 @@ def download_videos(
 	return metadata_list
 
 def sample_images(video_path: str, num_frames_to_sample: int = 5) -> list:
+	"""
+		Samples the number of images from the video in the given video_path
+	"""
 	# Load the video
 	cap = cv2.VideoCapture(video_path)
 

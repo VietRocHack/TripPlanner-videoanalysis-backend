@@ -31,7 +31,7 @@ def generate_itinerary():
 	num_frames_to_sample = json_data.get("num_frames_to_sample", 5)
 
 	# processing request
-	result, content = asyncio.run(analyze_videos.analyze_from_urls(
+	_, content = asyncio.run(analyze_videos.analyze_from_urls(
 		urls,
 		num_frames_to_sample,
 	))
@@ -47,10 +47,7 @@ def generate_itinerary():
 		}
 	}
 
-	if result:
-		return jsonify(response_packet), 200
-	else:
-		return jsonify({"error": content}), 500
+	return jsonify(response_packet), 200
 	
 
 

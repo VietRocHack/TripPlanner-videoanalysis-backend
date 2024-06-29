@@ -116,7 +116,7 @@ class AnalyzeVideoUnitTest(unittest.IsolatedAsyncioTestCase):
 			video_path=video,
 			metadata=metadata
 		)
-		print(analysis)
+
 		self.assertEqual(result, True)
 		self._verify_contain(analysis["content"], ["sandwich", "chicken"])
 

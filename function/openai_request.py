@@ -10,7 +10,7 @@ from function import utils
 import time
 from aiohttp import ClientSession, ClientError
 
-openai_request_logger = utils.setup_logger(__name__, f"../logs/openai_request_logger_{int(time.time())}.log")
+logger = utils.setup_logger(__name__, f"../logs/openai_request_logger_{int(time.time())}.log")
 
 load_dotenv()
 
@@ -24,6 +24,7 @@ async def analyze_images(
 	) -> dict:
 	# Convert the image to JPG format
 	# Convert the images to JPG format
+	cur_time = int(time.time())
 	base_64_list = []
 	for image in images:
 		_, image_jpg = cv2.imencode('.jpg', image)
@@ -75,8 +76,8 @@ async def analyze_images(
 		) as response:
 			response_json = await response.json()
 
-			openai_request_logger.info(
-				f"Reponse received from OpenAI with code {response.status}: {json.dumps(response_json)}"
+			logger.info(
+				f"[{cur_time}] Reponse received from OpenAI with code {response.status}: {json.dumps(response_json)}"
 			)
 
 			analysis_raw = response_json["choices"][0]["message"]["content"]
@@ -85,10 +86,10 @@ async def analyze_images(
 			return analysis_json
 
 	except ClientError as e:
-		openai_request_logger.error(f"ClientError durnig requesting OpenAI: {e}")
+		logger.error(f"[{cur_time}] ClientError durnig requesting OpenAI: {e}")
 		return {}
 	
 	except Exception as e:
-		openai_request_logger.error(f"Some happended during requesting OpenAI: {e}")
+		logger.error(f"[{cur_time}] Some happended during requesting OpenAI: {e}")
 		return {}
 

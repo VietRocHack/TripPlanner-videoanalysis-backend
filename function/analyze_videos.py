@@ -5,6 +5,10 @@ from urllib.parse import urlparse
 from dataclasses import dataclass
 from aiohttp import ClientSession
 import asyncio
+from function import utils
+import time
+
+logger = utils.setup_logger(__name__, f"../logs/analyze_videos_logger_{int(time.time())}.log")
 
 # YoutubeDL options to set output filename to vid-{id} and put it in dl folder
 ydl_opts = {
@@ -29,20 +33,25 @@ async def analyze_from_urls(
 		metadata_fields: list[str] = [] # supports "title", [more to be added]
 	) -> tuple[bool, dict[str, str]]:
 	# mapping: {video_id: analysis}
+	cur_time = int(time.time())
+	logger.info(f"[{ cur_time }] Analyzing with { num_frames_to_sample } frames with metatdata { metadata_fields }: { video_urls }")
 	video_analysis: dict[str, dict[str: str]] = {}
 	video_objects: dict[str, _TikTokVideoObject] = {}
 
 	for url in video_urls:
 		parsed_url = urlparse(url)
 		if "tiktok.com" not in parsed_url.hostname:
+			logger.info(f"[{ cur_time }] Invalid TikTok URL - bad hostname: { url }")
 			return False, "One or more video URLs are not from TikTok."
 		paths = parsed_url.path.split("/")
 		if len(paths) < 4:
+			logger.info(f"[{ cur_time }] Invalid TikTok URL - bad format: { url }")
 			return False, "Invalid TikTok video URL."
 
 		try:
 			metadata = download_single_video(url, metadata_fields=metadata_fields)
 		except Exception:
+			logger.info(f"[{ cur_time }] Unable to download: { url }")
 			return False, "Something happens during downloading video."
 
 		# If successfully downloaded, then keep data organized in one dataclass obj
@@ -63,7 +72,7 @@ async def analyze_from_urls(
 		tasks = []
 		task_ids = []
 		for video_id in video_ids:
-			print(f"Analyzing {video_id}")
+			logger.info(f"[{ cur_time }] Analyzing: { video_id }")
 			vid_obj = video_objects[video_id]
 			task_ids.append(video_id)
 			tasks.append(
@@ -81,12 +90,13 @@ async def analyze_from_urls(
 			video_id = task_ids[i]
 			result, data = results[i]
 			if result == True:
+				logger.info(f"[{ cur_time }] Finished analyzing { video_id }, result: { data }")
 				# True if result succeeds
 				vid_obj = video_objects[video_id]
 				data["video_url"] = vid_obj.get_clean_url()
 				video_analysis[video_id] = data
 			else:
-				# False if some shit happens TODO: Log something here
+				logger.error(f"[{ cur_time }] Error when analyzing: { video_id }")
 				video_analysis[video_id] = {"error": "Error when analyzing"}
 
 		return True, video_analysis

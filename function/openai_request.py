@@ -5,7 +5,7 @@ import base64
 from dotenv import load_dotenv
 import os
 import json
-import logging
+import io
 from function import utils
 import time
 from aiohttp import ClientSession, ClientError
@@ -67,9 +67,10 @@ async def analyze_images(
 	}
 
 	try:
+		payload_bytes = io.BytesIO(json.dumps(payload).encode('utf-8'))
 		async with session.post(
 			url="https://api.openai.com/v1/chat/completions",
-			json=payload,
+			data=payload_bytes,
 			headers=headers
 		) as response:
 			response_json = await response.json()

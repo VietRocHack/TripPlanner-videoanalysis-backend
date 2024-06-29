@@ -4,7 +4,7 @@ import os
 
 def setup_logger(name, filename, level=logging.DEBUG):
 	# Ensure the logs directory exists
-	log_dir = 'logs'
+	log_dir = '../logs'
 	if not os.path.exists(log_dir):
 			os.makedirs(log_dir)
 

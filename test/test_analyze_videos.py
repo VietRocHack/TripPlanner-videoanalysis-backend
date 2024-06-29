@@ -68,22 +68,20 @@ class AnalyzeVideoUnitTest(unittest.IsolatedAsyncioTestCase):
 		test_videos: list[helper.VideoAnalysisTestObject] = helper.get_test_video_urls()
 
 		urls = []
+
 		for test_video in test_videos:
 			urls.append(test_video.get_video_url())
 		
-		result, content = await analyze_videos.analyze_from_urls(
+		result, analysis_list = await analyze_videos.analyze_from_urls(
 			urls,
 			metadata_fields=metadata_fields,
 		)
 
 		self.assertTrue(result)
-
-		for test_video in test_videos:
-			video_id = test_video.id
-			self.assertIn(video_id, content)
-			self.assertIsNotNone(content[video_id])
-			
-			self._verify_video_analysis(test_video, content[video_id])
+		for i in range(len(test_videos)):
+			test_video = test_videos[i]
+			analysis = analysis_list[i]
+			self._verify_video_analysis(test_video, analysis)
 
 	async def _analyze_from_path(
 			self,

@@ -60,12 +60,11 @@ async def analyze_from_urls(
 			)
 		results = await asyncio.gather(*tasks)
 
+		# verify overall results and return whatever we can even if things fail
 		overall_result = True
-
 		for result, analysis in results:
 			overall_result &= result
 			video_analysis.append(analysis)
-
 		return overall_result, video_analysis
 
 async def analyze_from_url(

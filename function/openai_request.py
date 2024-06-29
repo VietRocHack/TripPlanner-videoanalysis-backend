@@ -22,7 +22,12 @@ async def analyze_images(
 		images: list,
 		metadata: dict[str, str] = {}
 	) -> dict:
-	# Convert the image to JPG format
+	"""
+		Receives a list of images supposedly to be sampled from a video, gives them
+		to OpenAI API, and returns the analysis on them.
+
+		Metadata is optional, and is provided as-is to the prompt to OpenAI
+	"""
 	# Convert the images to JPG format
 	cur_time = int(time.time())
 	base_64_list = []
@@ -86,7 +91,7 @@ async def analyze_images(
 			return analysis_json
 
 	except ClientError as e:
-		logger.error(f"[{cur_time}] ClientError durnig requesting OpenAI: {e}")
+		logger.error(f"[{cur_time}] ClientError during requesting OpenAI: {e}")
 		return {}
 	
 	except Exception as e:

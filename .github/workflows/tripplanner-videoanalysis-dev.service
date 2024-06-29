@@ -8,6 +8,7 @@ Group=nobody
 WorkingDirectory=/home/ec2-user/tripplanner-backend/videoanalysis/dev/src
 ExecStart=/home/ec2-user/tripplanner-backend/videoanalysis/dev/src/venv/bin/gunicorn -b 0.0.0.0:8003 wsgi:app
 Restart=always
+Timeout=60
 
 [Install]
 WantedBy=multi-user.target

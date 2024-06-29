@@ -3,6 +3,7 @@ from flask import Flask, jsonify, request
 from openai import OpenAI
 from dotenv import load_dotenv
 from function import analyze_videos
+import asyncio
 
 
 load_dotenv()
@@ -12,8 +13,6 @@ app = Flask(__name__)
 client = OpenAI()
 
 model = "gpt-3.5-turbo"
-
-USE_PARALLEL = True
 
 @app.route("/")
 def index():
@@ -30,11 +29,10 @@ def generate_itinerary():
 	num_frames_to_sample = json_data.get("num_frames_to_sample", 5)
 
 	# processing request
-	result, content = analyze_videos.analyze_from_urls(
+	result, content = asyncio.run(analyze_videos.analyze_from_urls(
 		urls,
 		num_frames_to_sample,
-		use_parallel=USE_PARALLEL # parallel for speedup
-	)
+	))
 
 	response_packet = {
 		"video_analysis": content,

@@ -97,10 +97,10 @@ async def analyze_transcript(
 		{
 			"type": "text",
 			"text": """This is a transcript from a TikTok video. """
-			"""Analyze this video using simple and to-the-point vocab using this json format: """
+			"""Analyze this video in details using simple and to-the-point vocab using this json format: """
 			f"""{ analysis_template }"""
-			f"""Included is a metadata of the video for better analysis: {json.dumps(metadata)} """
-			f"""{ transcript }"""
+			f"""Included is a metadata of the video for more things to analyze: {json.dumps(metadata)} """
+			f"""Transcript: { transcript }"""
 		})
 
 	payload = {
@@ -112,7 +112,7 @@ async def analyze_transcript(
 				"content": content
 			}
 		],
-		"max_tokens": 200
+		"max_tokens": 400
 	}
 
 	return await _send_request(session, payload, headers)
@@ -122,6 +122,8 @@ async def _send_request(
 		payload: dict,
 		headers: dict
 	) -> str:
+
+	logger.info(f"Sending request to OpenAI with payload { payload }")
 
 	try:
 		payload_bytes = io.BytesIO(json.dumps(payload).encode('utf-8'))

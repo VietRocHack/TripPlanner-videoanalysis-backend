@@ -225,7 +225,6 @@ def download_transcripts(
 			if requested_subtitles is None:
 				subtitle_list.append("")
 			subtitle_lang = list(requested_subtitles.keys())[0]
-			print(requested_subtitles)
 			subtitle_list.append(requested_subtitles[subtitle_lang]["filepath"])
 		
 	return subtitle_list, metadata_list

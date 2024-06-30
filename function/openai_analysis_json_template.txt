@@ -1,4 +1,4 @@
 {
-"content": <overall analysis of the TikTok video, including sentiments and feelings, store name(s) if exist>,
-"location": <location (if exists) of the content of the video including local area name or street, city, state, country, as specific as possible, write in full name of location, otherwise will be empty string>
+"content": <overall analysis of the TikTok video, including sentiments and feelings, what is going on in the video, store name(s) if exist.>,
+"location": <location (if exists) of the content of the video including local area name or street, city, state, country, as specific as possible, write in full name of location, otherwise will be empty string (""). Don't include store name here>
 }

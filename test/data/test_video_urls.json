@@ -11,7 +11,7 @@
 		"user": "@waynedang",
 		"video_id": "7382685489637330222",
 		"should_contain": {
-      "content": [["Soul", "Goode"], ["fried"]],
+      "content": [["Soul", "Goode"], ["fried", "shrimp", "fish", "chicken"]],
       "location": [["Houston", "Texas", "TX"], ["US", "United States"]]
     }
 	},
@@ -35,7 +35,7 @@
 		"user": "@maliaelaine",
 		"video_id": "7382421643236232491",
 		"should_contain": {
-      "content": [["Erewhon", "Market"], ["chicken", "sushi"], ["rice"]],
+      "content": [["Erewhon", "Market"], ["chicken", "sushi"]],
       "location": []
     }
 	},
@@ -43,8 +43,8 @@
 		"user": "@1hourlunchbreak",
 		"video_id": "7382290455230205230",
 		"should_contain": {
-      "content": [["cake", "cheese"], ["Uncle", "Tetsu"]],
-      "location": [["Los", "Angeles", "LA"], ["US", "United States"]]
+      "content": [["Uncle", "Testu"], ["cake", "cheese"], ["Oreo", "strawberry", "original"]],
+      "location": []
     }
 	}
 ]

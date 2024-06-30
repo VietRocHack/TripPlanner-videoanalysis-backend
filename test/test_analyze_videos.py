@@ -68,24 +68,22 @@ class AnalyzeVideoUnitTest(unittest.IsolatedAsyncioTestCase):
 		test_videos: list[helper.VideoAnalysisTestObject] = helper.get_test_video_urls()
 
 		urls = []
+
 		for test_video in test_videos:
 			urls.append(test_video.get_video_url())
 		
-		result, content = await analyze_videos.analyze_from_urls(
+		result, analysis_list = await analyze_videos.analyze_from_urls(
 			urls,
 			metadata_fields=metadata_fields,
 		)
 
 		self.assertTrue(result)
+		for i in range(len(test_videos)):
+			test_video = test_videos[i]
+			analysis = analysis_list[i]
+			self._verify_video_analysis(test_video, analysis)
 
-		for test_video in test_videos:
-			video_id = test_video.id
-			self.assertIn(video_id, content)
-			self.assertIsNotNone(content[video_id])
-			
-			self._verify_video_analysis(test_video, content[video_id])
-
-	async def _analyze_from_path(
+	async def _analyze_from_video_path(
 			self,
 			video_path: str,
 			num_frames_to_sample: int = 5,
@@ -105,14 +103,32 @@ class AnalyzeVideoUnitTest(unittest.IsolatedAsyncioTestCase):
 
 			return result, analysis
 
-	async def test_analyze_video(self):
+	async def _analyze_from_transcript_path(
+			self,
+			transcript_path: str,
+			metadata: dict[str, str] = {}
+	):
+		"""
+			Helper function to run analyze_videos.analyze_from_path since it needs a
+			ClientSession. TODO: there's probably better way to do this...
+		"""
+		async with ClientSession() as session:
+			result, analysis = await analyze_videos.analyze_from_transcript(
+				session,
+				transcript_path,
+				metadata
+			)
+
+			return result, analysis
+
+	async def test_analyze_video_by_images(self):
 		# This is the downloaded video of the first video in the test_videos
 		video = "test/data/test_video.mp4"
 		f = open('test/data/test_video_metadata.json')
 		metadata = json.load(f)
 		f.close()
 
-		result, analysis = await self._analyze_from_path(
+		result, analysis = await self._analyze_from_video_path(
 			video_path=video,
 			metadata=metadata
 		)
@@ -122,7 +138,7 @@ class AnalyzeVideoUnitTest(unittest.IsolatedAsyncioTestCase):
 
 	async def test_analyze_video_dne(self):
 		video = "test/data/dne.mp4"
-		result, content = await self._analyze_from_path(video)
+		result, content = await self._analyze_from_video_path(video)
 
 		self.assertEqual(result, False)
 		self.assertEqual(content, "Failed to load video")
@@ -136,42 +152,77 @@ class AnalyzeVideoUnitTest(unittest.IsolatedAsyncioTestCase):
 
 	async def test_analyze_video_from_url(self):
 		test_vid = TEST_VIDEOS[0]
-		video_user = test_vid.user
-		video_id = test_vid.id
-		url = f"https://www.tiktok.com/{ video_user }/video/{ video_id }?lang=en"
+		url = test_vid.get_video_url()
 		result, data = await analyze_videos.analyze_from_urls([url], metadata_fields=["title"])
 
 		# verify result
 		self.assertTrue(result)
-		self.assertIn(video_id, data)
-		self.assertIsNotNone(data[video_id])
+		self.assertGreater(len(data), 0)
 
 		# verify analysis of video
-		self._verify_video_analysis(test_vid, data[video_id])
+		self._verify_video_analysis(test_vid, data[0])
 
 	async def test_invalid_url_not_from_tiktok(self):
 		url = "https://www.youtube.com"
 		result, content = await analyze_videos.analyze_from_urls([url])
 
 		self.assertFalse(result)
-		self.assertEqual(content, "One or more video URLs are not from TikTok.")
+		self.assertEqual(content, [{"error": "One or more video URLs are not from TikTok."}])
 
 	async def test_invalid_url_invalid_download_link(self):
 		url = "https://www.tiktok.com/@jacksdiningroom/video"
 		result, content = await analyze_videos.analyze_from_urls([url])
 
 		self.assertFalse(result)
-		self.assertEqual(content, "Invalid TikTok video URL.")
+		self.assertEqual(content, [{"error": "Invalid TikTok video URL."}])
 
 	async def test_invalid_url_bad_download_link(self):
 		url = "https://www.tiktok.com/@jacksdiningroom/video/gibberish"
 		result, content = await analyze_videos.analyze_from_urls([url])
 
 		self.assertFalse(result)
-		self.assertEqual(content, "Something happens during downloading video.")
+		self.assertEqual(content, [{"error": "Something happens during downloading video."}])
 
 	async def test_analyze_video_from_multiple_urls(self):
 		await self._send_test_request_with_multiple_urls(metadata_fields=["title"])
+
+	async def test_analyze_video_using_transcript(self):
+		# This is the downloaded video of the first video in the test_videos
+		transcript = "test/data/test_video_transcript_raw.vtt"
+		f = open('test/data/test_video_metadata.json')
+		metadata = json.load(f)
+		f.close()
+
+		result, analysis = await self._analyze_from_transcript_path(
+			transcript,
+			metadata
+		)
+
+		self.assertEqual(result, True)
+		self._verify_contain(analysis["content"], ["sandwich", "chicken"])
+
+	async def test_trim_transcript_vtt(self):
+		transcript = analyze_videos._trim_transcript_vtt("test/data/test_video_transcript_raw.vtt")
+		
+		with open("test/data/test_video_transcript.txt") as f:
+			expected_transcript = f.read()
+
+		self.assertEqual(transcript, expected_transcript)
+
+	async def test_analyze_video_using_url_no_transcript(self):
+		url = "https://www.tiktok.com/@asmrjade_yt/video/7369739907775941895"
+		result, data = await analyze_videos.analyze_from_urls(
+			[url],
+			num_frames_to_sample=5,
+			metadata_fields=["title"]
+		)
+
+		# verify result
+		self.assertTrue(result)
+		self.assertGreater(len(data), 0)
+		analysis = data[0]
+
+		self.assertIn("marshmallow", analysis["content"])
 
 if __name__ == '__main__':
 	unittest.main()

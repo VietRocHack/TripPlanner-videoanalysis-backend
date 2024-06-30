@@ -6,7 +6,7 @@ After=network.target
 User=ec2-user
 Group=nobody
 WorkingDirectory=/home/ec2-user/tripplanner-backend/videoanalysis/prod/src
-ExecStart=/home/ec2-user/tripplanner-backend/videoanalysis/prod/src/venv/bin/gunicorn --timeout 120 -b 0.0.0.0:8002 wsgi:app
+ExecStart=/home/ec2-user/tripplanner-backend/videoanalysis/prod/src/venv/bin/gunicorn --timeout 60 -b 0.0.0.0:8002 wsgi:app
 Restart=always
 
 [Install]

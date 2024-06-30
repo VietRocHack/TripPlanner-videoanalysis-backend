@@ -164,5 +164,5 @@ cython_debug/
 # Private keys and stuff
 settings.py
 
-# Downloaded TikTok videos
-vid-*.mp4
+# Downloaded TikTok data
+dl/*

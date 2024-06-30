@@ -1,6 +1,4 @@
-import requests
 import cv2
-from openai import OpenAI
 import base64
 from dotenv import load_dotenv
 import os
@@ -29,7 +27,6 @@ async def analyze_images(
 		Metadata is optional, and is provided as-is to the prompt to OpenAI
 	"""
 	# Convert the images to JPG format
-	cur_time = int(time.time())
 	base_64_list = []
 	for image in images:
 		_, image_jpg = cv2.imencode('.jpg', image)
@@ -72,6 +69,59 @@ async def analyze_images(
 		"max_tokens": 200
 	}
 
+	return await _send_request(session, payload, headers)
+
+
+async def analyze_transcript(
+		session: ClientSession,
+		transcript: str,
+		metadata: dict[str, str] = {}
+	) -> dict:
+	"""
+		Receives a list of images supposedly to be sampled from a video, gives them
+		to OpenAI API, and returns the analysis on them.
+
+		Metadata is optional, and is provided as-is to the prompt to OpenAI
+	"""
+
+	headers = {
+		"Content-Type": "application/json",
+		"Authorization": f"Bearer { os.environ.get('OPENAI_API_KEY') }"
+	}
+
+	content = []
+	content.append(
+		{
+			"type": "text",
+			"text": """This is a transcript from a TikTok video. """
+			"""Analyze this video in details using simple and to-the-point vocab using this json format: """
+			f"""{ analysis_template }"""
+			f"""Included is a metadata of the video for more things to analyze: {json.dumps(metadata)} """
+			f"""Transcript: { transcript }"""
+		})
+
+	payload = {
+		"model": "gpt-3.5-turbo",
+  	"response_format": {"type": "json_object"},
+		"messages": [
+			{
+				"role": "user",
+				"content": content
+			}
+		],
+		"max_tokens": 400
+	}
+
+	return await _send_request(session, payload, headers)
+
+async def _send_request(
+		session: ClientSession,
+		payload: dict,
+		headers: dict
+	) -> str:
+
+	logger.info(f"Sending request to OpenAI with payload { payload }")
+
 	try:
 		payload_bytes = io.BytesIO(json.dumps(payload).encode('utf-8'))
 		async with session.post(
@@ -81,9 +131,7 @@ async def analyze_images(
 		) as response:
 			response_json = await response.json()
 
-			logger.info(
-				f"[{cur_time}] Reponse received from OpenAI with code {response.status}: {json.dumps(response_json)}"
-			)
+			logger.info(f"Reponse received from OpenAI with code {response.status}: {json.dumps(response_json)}")
 
 			analysis_raw = response_json["choices"][0]["message"]["content"]
 
@@ -91,10 +139,9 @@ async def analyze_images(
 			return analysis_json
 
 	except ClientError as e:
-		logger.error(f"[{cur_time}] ClientError during requesting OpenAI: {e}")
-		return {}
+		logger.error(f"ClientError during requesting OpenAI: {e}")
+		return {"error": "An error has happened"}
 	
 	except Exception as e:
-		logger.error(f"[{cur_time}] Some happended during requesting OpenAI: {e}")
-		return {}
-
+		logger.error(f"Some happened during requesting OpenAI: {e}")
+		return {"error": "An error has happened"}

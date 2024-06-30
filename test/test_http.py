@@ -42,13 +42,10 @@ class HttpTest(unittest.TestCase):
 			self.assertIn("metadata", response_data)
 
 			# checking for analysis
-			content = response_data["video_analysis"]
-			for test_video in test_videos:
-				video_id = test_video.id
-				self.assertIn(video_id, content)
-				self.assertIsNotNone(content[video_id])
-
-				analysis = content[video_id]
+			analysis_list = response_data["video_analysis"]
+			for i in range(len(test_videos)):
+				test_video = test_videos[i]
+				analysis = analysis_list[i]
 
 				# Test quality of analysis
 				for should_contain in test_video.should_contain:

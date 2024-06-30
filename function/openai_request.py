@@ -104,7 +104,7 @@ async def analyze_transcript(
 		})
 
 	payload = {
-		"model": "gpt-4o",
+		"model": "gpt-3.5-turbo",
   	"response_format": {"type": "json_object"},
 		"messages": [
 			{

@@ -1,3 +1,4 @@
+import re
 import traceback
 import cv2
 from function import openai_request 
@@ -168,8 +169,7 @@ async def analyze_from_transcript(
 	"""
 		Analyze a video from its video path and metadata (optional)
 	"""
-	with open(transcript_path) as f:
-		transcript = f.read()
+	transcript = _trim_transcript_vtt(transcript_path)
 
 	analysis = await openai_request.analyze_transcript(
 			session=session,
@@ -178,6 +178,17 @@ async def analyze_from_transcript(
 		)
 
 	return (True, analysis)
+
+def _trim_transcript_vtt(transcript_path: str) -> str:
+	with open(transcript_path) as f:
+		transcript_lines = f.readlines()
+	transcript = ""
+	for line in transcript_lines:
+			# Check if the line is a timestamp line
+		if not re.match(r'^\d{2}:\d{2}:\d{2}\.\d{3} --> \d{2}:\d{2}:\d{2}\.\d{3}$', line) and line.strip() != '':
+			transcript += line
+
+	return transcript
 
 def download_single_transcript(
 		video_url: str,

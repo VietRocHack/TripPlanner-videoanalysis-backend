@@ -168,5 +168,13 @@ class AnalyzeVideoUnitTest(unittest.IsolatedAsyncioTestCase):
 	async def test_analyze_video_from_multiple_urls(self):
 		await self._send_test_request_with_multiple_urls(metadata_fields=["title"])
 
+	async def test_trim_transcript_vtt(self):
+		transcript = analyze_videos._trim_transcript_vtt("test/data/test_video_transcript_raw.vtt")
+		
+		with open("test/data/test_video_transcript.txt") as f:
+			expected_transcript = f.read()
+
+		self.assertEqual(transcript, expected_transcript)
+
 if __name__ == '__main__':
 	unittest.main()

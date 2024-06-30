@@ -34,6 +34,7 @@ def generate_itinerary():
 	_, content = asyncio.run(analyze_videos.analyze_from_urls(
 		urls,
 		num_frames_to_sample,
+		metadata_fields=["title"]
 	))
 
 	response_packet = {

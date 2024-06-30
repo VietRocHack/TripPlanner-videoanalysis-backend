@@ -8,6 +8,10 @@ class OpenAIRequestUnitTest(unittest.IsolatedAsyncioTestCase):
 		async with ClientSession() as session:
 			return await openai_request.analyze_images(session, images)
 
+	async def _analyze_transcript(self, transcript: str):
+		async with ClientSession() as session:
+			return await openai_request.analyze_transcript(session, transcript)
+
 	async def test_send_request_image(self):
 		# Read the image using OpenCV
 		image = cv2.imread("test/data/test_images/frame_0.jpg")
@@ -28,6 +32,20 @@ class OpenAIRequestUnitTest(unittest.IsolatedAsyncioTestCase):
 			image = cv2.imread(image_path)
 			image_list.append(image)
 		analysis = await self._analyze_images(image_list)
+
+		self.assertIsNotNone(analysis)
+		self.assertIn("content", analysis)
+
+		content = analysis["content"]
+		self.assertTrue("sandwich" in content)
+		self.assertTrue("video" in content)
+
+	async def test_send_request_transcript(self):
+		
+		with open("test/data/test_video_transcript.txt") as f:
+			transcript = f.read()
+
+		analysis = await self._analyze_transcript(transcript)
 
 		self.assertIsNotNone(analysis)
 		self.assertIn("content", analysis)

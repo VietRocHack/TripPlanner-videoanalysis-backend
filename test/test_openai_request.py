@@ -22,8 +22,8 @@ class OpenAIRequestUnitTest(unittest.IsolatedAsyncioTestCase):
 		self.assertIsNotNone(analysis)
 		self.assertIn("content", analysis)
 		content = analysis["content"]
-		self.assertTrue("sandwich" in content)
-		self.assertTrue("video" in content)
+		self.assertIn("sandwich", content)
+		self.assertIn("video", content)
 
 	async def test_send_request_multiple_images(self):
 		image_list = []
@@ -37,8 +37,8 @@ class OpenAIRequestUnitTest(unittest.IsolatedAsyncioTestCase):
 		self.assertIn("content", analysis)
 
 		content = analysis["content"]
-		self.assertTrue("sandwich" in content)
-		self.assertTrue("video" in content)
+		self.assertIn("sandwich", content)
+		self.assertIn("video", content)
 
 	async def test_send_request_transcript(self):
 		
@@ -51,8 +51,8 @@ class OpenAIRequestUnitTest(unittest.IsolatedAsyncioTestCase):
 		self.assertIn("content", analysis)
 
 		content = analysis["content"]
-		self.assertTrue("sandwich" in content)
-		self.assertTrue("video" in content)
+		self.assertIn("sandwich", content)
+		self.assertIn("Mama", content)
 
 if __name__ == '__main__':
 	unittest.main()

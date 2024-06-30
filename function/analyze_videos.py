@@ -4,7 +4,7 @@ import cv2
 from function import openai_request 
 from yt_dlp import YoutubeDL
 from urllib.parse import urlparse
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from aiohttp import ClientSession
 import asyncio
 from function import utils
@@ -29,9 +29,9 @@ ydl_transcript_opts = {
 class _TikTokVideoObject:
 	id: str
 	user: str
-	path: str
-	metadata: dict[str, str]
-	transcript_path: str
+	# path: str = ""
+	# metadata: dict[str, str] = field(default_factory=dict)
+	# transcript_path: str = ""
 
 	def get_clean_url(self) -> str:
 		return f"https://www.tiktok.com/{ self.user }/video/{ self.id }"
@@ -97,45 +97,55 @@ async def analyze_from_url(
 		logger.info(f"Invalid TikTok URL - bad format: { video_url }")
 		return False, {"error": "Invalid TikTok video URL."}
 
-	# Download video from url
+	vid_obj = _TikTokVideoObject(id=paths[3], user=paths[1])
+	
+	# Flag to switch to using video
+	use_video = False
+
+	# Download transcript from url
 	try:
 		transcript_path, metadata = download_single_transcript(video_url, metadata_fields)
-	except Exception as e:
-		logger.info(f"Unable to download with { video_url } with exception { traceback.format_exc() }")
-		return False, {"error": "Something happens during downloading video."}
+		if transcript_path == "":
+			use_video = True
+			logger.info(f"Switching to video because transcript is not available for { video_url }")
+		else:
+			# Start analyzing process 
+			result, data = await analyze_from_transcript(
+				session,
+				transcript_path,
+				metadata
+			)
+	except Exception:
+		use_video = True
+		logger.info(f"Switching to video because unable to download transcript with { video_url } with exception { traceback.format_exc() }")
 
-	# If successfully downloaded, then keep data organized in one dataclass obj
-	video_id = paths[3]
-	vid_obj = _TikTokVideoObject(
-		id=video_id,
-		user=paths[1],
-		path=f'dl/vid-{video_id}.mp4',
-		metadata=metadata,
-		transcript_path=transcript_path
-	)
-
-	# Start analyzing process 
-	# result, data = await analyze_from_path(
-	# 	session,
-	# 	vid_obj.path,
-	# 	num_frames_to_sample,
-	# 	vid_obj.metadata
-	# )
-
-	result, data = await analyze_from_transcript(
-		session,
-		transcript_path,
-		vid_obj.metadata
-	)
+	# If unable to download transcript, then switch to video
+	if use_video:
+		try:
+			video_path, metadata = download_single_video(video_url, metadata_fields)
+			if video_path == "":
+				logger.info(f"Unable to analyze video because there is nothing to analyze for { video_url }")
+			else:
+				# Start analyzing process 
+				result, data = await analyze_from_path(
+					session,
+					video_path,
+					num_frames_to_sample,
+					metadata
+				)
+		except Exception:
+			use_video = True
+			logger.info(f"Unable to download video with { video_url } with exception { traceback.format_exc() }")
+			return False, {"error": "Something happens during downloading video."}
 
 	# Post-process result
 	if result == True:
-		logger.info(f"Finished analyzing { video_id }, result: { data }")
+		logger.info(f"Finished analyzing { video_url }, result: { data }")
 		# True if result succeeds
 		data["video_url"] = vid_obj.get_clean_url()
 		return True, data
 	else:
-		logger.error(f"Error when analyzing: { video_id }")
+		logger.error(f"Error when analyzing: { video_url }")
 		return False, {"error": "Error when analyzing"}
 
 async def analyze_from_path(
@@ -185,7 +195,8 @@ def _trim_transcript_vtt(transcript_path: str) -> str:
 	transcript = ""
 	for line in transcript_lines:
 			# Check if the line is a timestamp line
-		if not re.match(r'^\d{2}:\d{2}:\d{2}\.\d{3} --> \d{2}:\d{2}:\d{2}\.\d{3}$', line) and line.strip() != '':
+		if (not re.match(r'^\d{2}:\d{2}:\d{2}\.\d{3} --> \d{2}:\d{2}:\d{2}\.\d{3}$', line)
+			and line.strip() != ''):
 			transcript += line
 
 	return transcript
@@ -224,23 +235,28 @@ def download_transcripts(
 			requested_subtitles: dict = info.get("requested_subtitles", None)
 			if requested_subtitles is None:
 				subtitle_list.append("")
-			subtitle_lang = list(requested_subtitles.keys())[0]
-			subtitle_list.append(requested_subtitles[subtitle_lang]["filepath"])
+			else:
+				subtitle_lang = list(requested_subtitles.keys())[0]
+				subtitle_list.append(requested_subtitles[subtitle_lang]["filepath"])
 		
 	return subtitle_list, metadata_list
 
-def download_single_video(video_url: str, metadata_fields: dict[str, str] = []):
+def download_single_video(
+		video_url: str,
+		metadata_fields: dict[str, str] = []
+	) -> tuple[str, str]:
 	"""
 		Helper function to download single video using #download_videos()
 	"""
-	metadata = download_videos([video_url], metadata_fields)[0]
-	return metadata
+	video_list, metadata_list = download_videos([video_url], metadata_fields)
+	video_path, metadata = video_list[0], metadata_list[0]
+	return video_path, metadata
 
 
 def download_videos(
 		video_urls: list[str], 
 		metadata_fields: dict[str, str] = []
-	) -> list[dict[str, str]]:
+	) -> tuple[list[str], list[dict[str, str]]]:
 	"""
 		Downloads the video in the given list of urls in video_urls.
 		Also returns a list of metadata object that is filtered by the given
@@ -248,18 +264,27 @@ def download_videos(
 	"""
 	metadata_list = []
 	with YoutubeDL(ydl_opts) as ydl:
+		video_list = []
 		for video_url in video_urls:
 			# download video and also extracting info
-			video = ydl.extract_info(video_url, download=True)
+			info = ydl.extract_info(video_url, download=True)
 
 			metadata = {}
 
 			for field in metadata_fields:
-				metadata[field] = video.get(field, None)
+				metadata[field] = info.get(field, None)
 
 			metadata_list.append(metadata)
+
+			# extract downloaded subtitles, if any
+			requested_downloads: dict = info.get("requested_downloads", None)
+			if not requested_downloads:
+				video_list.append("")
+			else:
+				video_list.append(requested_downloads[0]["filepath"])
+
 		
-	return metadata_list
+	return video_list, metadata_list
 
 def sample_images(video_path: str, num_frames_to_sample: int = 5) -> list:
 	"""

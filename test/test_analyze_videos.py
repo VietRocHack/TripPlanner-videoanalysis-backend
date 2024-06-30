@@ -211,13 +211,18 @@ class AnalyzeVideoUnitTest(unittest.IsolatedAsyncioTestCase):
 
 	async def test_analyze_video_using_url_no_transcript(self):
 		url = "https://www.tiktok.com/@asmrjade_yt/video/7369739907775941895"
-		result, data = await analyze_videos.analyze_from_urls([url], num_frames_to_sample=5)
+		result, data = await analyze_videos.analyze_from_urls(
+			[url],
+			num_frames_to_sample=5,
+			metadata_fields=["title"]
+		)
 
 		# verify result
 		self.assertTrue(result)
 		self.assertGreater(len(data), 0)
+		analysis = data[0]
 
-		self.assertIn("marshmallow" in data["content"])
+		self.assertIn("marshmallow", analysis["content"])
 
 if __name__ == '__main__':
 	unittest.main()

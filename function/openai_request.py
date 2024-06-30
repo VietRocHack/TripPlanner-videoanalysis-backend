@@ -1,6 +1,4 @@
-import requests
 import cv2
-from openai import OpenAI
 import base64
 from dotenv import load_dotenv
 import os
@@ -29,7 +27,6 @@ async def analyze_images(
 		Metadata is optional, and is provided as-is to the prompt to OpenAI
 	"""
 	# Convert the images to JPG format
-	cur_time = int(time.time())
 	base_64_list = []
 	for image in images:
 		_, image_jpg = cv2.imencode('.jpg', image)

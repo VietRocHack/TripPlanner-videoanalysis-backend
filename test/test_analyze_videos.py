@@ -83,7 +83,7 @@ class AnalyzeVideoUnitTest(unittest.IsolatedAsyncioTestCase):
 			analysis = analysis_list[i]
 			self._verify_video_analysis(test_video, analysis)
 
-	async def _analyze_from_path(
+	async def _analyze_from_video_path(
 			self,
 			video_path: str,
 			num_frames_to_sample: int = 5,
@@ -103,14 +103,32 @@ class AnalyzeVideoUnitTest(unittest.IsolatedAsyncioTestCase):
 
 			return result, analysis
 
-	async def test_analyze_video(self):
+	async def _analyze_from_transcript_path(
+			self,
+			transcript_path: str,
+			metadata: dict[str, str] = {}
+	):
+		"""
+			Helper function to run analyze_videos.analyze_from_path since it needs a
+			ClientSession. TODO: there's probably better way to do this...
+		"""
+		async with ClientSession() as session:
+			result, analysis = await analyze_videos.analyze_from_transcript(
+				session,
+				transcript_path,
+				metadata
+			)
+
+			return result, analysis
+
+	async def test_analyze_video_by_images(self):
 		# This is the downloaded video of the first video in the test_videos
 		video = "test/data/test_video.mp4"
 		f = open('test/data/test_video_metadata.json')
 		metadata = json.load(f)
 		f.close()
 
-		result, analysis = await self._analyze_from_path(
+		result, analysis = await self._analyze_from_video_path(
 			video_path=video,
 			metadata=metadata
 		)
@@ -120,7 +138,7 @@ class AnalyzeVideoUnitTest(unittest.IsolatedAsyncioTestCase):
 
 	async def test_analyze_video_dne(self):
 		video = "test/data/dne.mp4"
-		result, content = await self._analyze_from_path(video)
+		result, content = await self._analyze_from_video_path(video)
 
 		self.assertEqual(result, False)
 		self.assertEqual(content, "Failed to load video")
@@ -167,6 +185,21 @@ class AnalyzeVideoUnitTest(unittest.IsolatedAsyncioTestCase):
 
 	async def test_analyze_video_from_multiple_urls(self):
 		await self._send_test_request_with_multiple_urls(metadata_fields=["title"])
+
+	async def test_analyze_video_using_transcript(self):
+		# This is the downloaded video of the first video in the test_videos
+		transcript = "test/data/test_video_transcript_raw.vtt"
+		f = open('test/data/test_video_metadata.json')
+		metadata = json.load(f)
+		f.close()
+
+		result, analysis = await self._analyze_from_transcript_path(
+			transcript,
+			metadata
+		)
+
+		self.assertEqual(result, True)
+		self._verify_contain(analysis["content"], ["sandwich", "chicken"])
 
 	async def test_trim_transcript_vtt(self):
 		transcript = analyze_videos._trim_transcript_vtt("test/data/test_video_transcript_raw.vtt")

@@ -35,7 +35,7 @@
 		"user": "@maliaelaine",
 		"video_id": "7382421643236232491",
 		"should_contain": {
-      "content": [["Erewhon", "Market"], ["food"]],
+      "content": [["Erewhon", "Market"], ["sushi"], ["rice"]],
       "location": []
     }
 	},

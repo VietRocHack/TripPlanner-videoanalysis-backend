@@ -15,13 +15,13 @@ logger = utils.setup_logger(__name__, f"../logs/analyze_videos_logger_{int(time.
 ydl_opts = {
 	'outtmpl': './dl/vid-%(id)s.%(ext)s',
 	'quiet': True,
-	'no_warnings': True,
 }
 
 ydl_transcript_opts = {
 	'outtmpl': './dl/vid-%(id)s.%(ext)s',
 	'skip_download': True,
 	'writesubtitles': True,
+	'quiet': True,
 }
 
 @dataclass
@@ -102,8 +102,6 @@ async def analyze_from_url(
 	except Exception as e:
 		logger.info(f"Unable to download with { video_url } with exception { traceback.format_exc() }")
 		return False, {"error": "Something happens during downloading video."}
-
-	print("transcript", transcript_path)
 
 	# If successfully downloaded, then keep data organized in one dataclass obj
 	video_id = paths[3]

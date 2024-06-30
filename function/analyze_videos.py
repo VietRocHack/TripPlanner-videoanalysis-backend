@@ -1,3 +1,4 @@
+import traceback
 import cv2
 from function import openai_request 
 from yt_dlp import YoutubeDL
@@ -17,12 +18,19 @@ ydl_opts = {
 	'no_warnings': True,
 }
 
+ydl_transcript_opts = {
+	'outtmpl': './dl/vid-%(id)s.%(ext)s',
+	'skip_download': True,
+	'writesubtitles': True,
+}
+
 @dataclass
 class _TikTokVideoObject:
 	id: str
 	user: str
 	path: str
 	metadata: dict[str, str]
+	transcript_path: str
 
 	def get_clean_url(self) -> str:
 		return f"https://www.tiktok.com/{ self.user }/video/{ self.id }"
@@ -90,10 +98,12 @@ async def analyze_from_url(
 
 	# Download video from url
 	try:
-		metadata = download_single_video(video_url, metadata_fields=metadata_fields)
-	except Exception:
-		logger.info(f"Unable to download: { video_url }")
+		transcript_path, metadata = download_single_transcript(video_url, metadata_fields)
+	except Exception as e:
+		logger.info(f"Unable to download with { video_url } with exception { traceback.format_exc() }")
 		return False, {"error": "Something happens during downloading video."}
+
+	print("transcript", transcript_path)
 
 	# If successfully downloaded, then keep data organized in one dataclass obj
 	video_id = paths[3]
@@ -101,14 +111,21 @@ async def analyze_from_url(
 		id=video_id,
 		user=paths[1],
 		path=f'dl/vid-{video_id}.mp4',
-		metadata=metadata
+		metadata=metadata,
+		transcript_path=transcript_path
 	)
 
 	# Start analyzing process 
-	result, data = await analyze_from_path(
+	# result, data = await analyze_from_path(
+	# 	session,
+	# 	vid_obj.path,
+	# 	num_frames_to_sample,
+	# 	vid_obj.metadata
+	# )
+
+	result, data = await analyze_from_transcript(
 		session,
-		vid_obj.path,
-		num_frames_to_sample,
+		transcript_path,
 		vid_obj.metadata
 	)
 
@@ -144,6 +161,65 @@ async def analyze_from_path(
 		)
 
 	return (True, analysis)
+
+async def analyze_from_transcript(
+		session: ClientSession,
+		transcript_path: str,
+		metadata: dict[str, str] = {}
+	) -> tuple[bool, dict]:
+	"""
+		Analyze a video from its video path and metadata (optional)
+	"""
+	with open(transcript_path) as f:
+		transcript = f.read()
+
+	analysis = await openai_request.analyze_transcript(
+			session=session,
+			transcript=transcript,
+			metadata=metadata
+		)
+
+	return (True, analysis)
+
+def download_single_transcript(
+		video_url: str,
+		metadata_fields: dict[str, str] = []
+	) -> tuple[str, str]:
+	"""
+		Helper function to download single video using #download_videos()
+	"""
+	subtitle_list, metadata_list = download_transcripts([video_url], metadata_fields)
+	subtitle_path, metadata = subtitle_list[0], metadata_list[0]
+	return subtitle_path, metadata
+
+def download_transcripts(
+		video_urls: list[str],
+		metadata_fields: dict[str, str] = []
+	) -> tuple[list[str], list[str]]:
+	metadata_list = []
+	subtitle_list = []
+	with YoutubeDL(ydl_transcript_opts) as ydl:
+		for video_url in video_urls:
+			# download transcript
+			info = ydl.extract_info(video_url)
+
+			metadata = {}
+
+			# extract metadata by requested metadata fields
+			for field in metadata_fields:
+				metadata[field] = info.get(field, None)
+
+			metadata_list.append(metadata)
+
+			# extract downloaded subtitles, if any
+			requested_subtitles: dict = info.get("requested_subtitles", None)
+			if requested_subtitles is None:
+				subtitle_list.append("")
+			subtitle_lang = list(requested_subtitles.keys())[0]
+			print(requested_subtitles)
+			subtitle_list.append(requested_subtitles[subtitle_lang]["filepath"])
+		
+	return subtitle_list, metadata_list
 
 def download_single_video(video_url: str, metadata_fields: dict[str, str] = []):
 	"""

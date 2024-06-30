@@ -134,9 +134,7 @@ class AnalyzeVideoUnitTest(unittest.IsolatedAsyncioTestCase):
 
 	async def test_analyze_video_from_url(self):
 		test_vid = TEST_VIDEOS[0]
-		video_user = test_vid.user
-		video_id = test_vid.id
-		url = f"https://www.tiktok.com/{ video_user }/video/{ video_id }?lang=en"
+		url = test_vid.get_video_url()
 		result, data = await analyze_videos.analyze_from_urls([url], metadata_fields=["title"])
 
 		# verify result

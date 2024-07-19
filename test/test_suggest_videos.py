@@ -1,9 +1,17 @@
+import os
 import unittest
 from function import suggest_videos, utils
 
 class SuggestVideosUnitTest(unittest.TestCase):
 
-	async def test_suggest_random_video_by_location(self):
+	def test_get_tiktok_access_token(self):
+		is_success, response = suggest_videos.get_tiktok_access_token()
+
+		self.assertTrue(is_success)
+
+		self.assertRegex(response["access_token"], r'^clt\..+$')
+
+	def test_suggest_random_video_by_location(self):
 		location = "New York, NY"
 		num_videos = 5
 

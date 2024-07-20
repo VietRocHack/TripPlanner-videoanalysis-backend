@@ -4,14 +4,19 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+
 from function import utils
 import time
 
 options = Options()
 options.add_argument("--headless")
+options.add_argument("--disable-gpu")
 options.add_argument("--no-sandbox")
+options.add_argument("enable-automation")
+options.add_argument("--disable-infobars")
 options.add_argument("--disable-dev-shm-usage")
-options.add_argument("--silent")
 
 logger = utils.setup_logger(__name__, f"../logs/analyze_videos_logger_{int(time.time())}.log")
 
@@ -21,7 +26,7 @@ def suggest(query: str, num_videos: int) -> tuple[bool, dict[str, str]]:
 	# Remove all non-alphabetic characters
 	cleaned_query = re.sub(r"[^a-zA-Z-]", "", cleaned_query)
 
-	driver = webdriver.Chrome(options=options)
+	driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 	logger.info(f"Accessing https://www.tiktok.com/discover/{cleaned_query}")
 	driver.get(f"https://www.tiktok.com/discover/{cleaned_query}")
 

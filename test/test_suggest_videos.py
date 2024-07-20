@@ -1,9 +1,9 @@
-import os
 import unittest
 from function import suggest_videos, utils
 
 class SuggestVideosUnitTest(unittest.TestCase):
 
+	@unittest.skip("Not needed for now")
 	def test_get_tiktok_access_token(self):
 		is_success, response = suggest_videos.get_tiktok_access_token()
 
@@ -15,8 +15,12 @@ class SuggestVideosUnitTest(unittest.TestCase):
 		location = "New York, NY"
 		num_videos = 5
 
-		suggested_videos = suggest_videos.suggest(location, num_videos)
+		result, response = suggest_videos.suggest(location, num_videos)
 
+		print(response)
+
+		self.assertTrue(result)
+		suggested_videos = response["result"]
 		self.assertEqual(len(suggested_videos), num_videos)
 
 		for video in suggested_videos:

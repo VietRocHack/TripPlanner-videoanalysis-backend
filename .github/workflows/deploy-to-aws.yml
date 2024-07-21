@@ -14,79 +14,80 @@ env:
 
 jobs:
   deploy:
-    runs-on: self-hosted  # Specify that the job runs on a self-hosted runner
+    runs-on: self-hosted # Specify that the job runs on a self-hosted runner
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Set environment for merge to main branch
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-      run: |
-        echo "STAGE=prod" >> $GITHUB_ENV
-        echo "PORT=8002" >> $GITHUB_ENV
+      - name: Set environment for merge to main branch
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          echo "STAGE=prod" >> $GITHUB_ENV
+          echo "PORT=8002" >> $GITHUB_ENV
 
-    - name: Set environment for pull request
-      if: github.event_name == 'pull_request'
-      run: |
-        echo "STAGE=dev" >> $GITHUB_ENV
-        echo "PORT=8003" >> $GITHUB_ENV
+      - name: Set environment for pull request
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "STAGE=dev" >> $GITHUB_ENV
+          echo "PORT=8003" >> $GITHUB_ENV
 
-    - name: Set environment for service name and hosting folder
-      run: |
-        echo "SERVICE_NAME=tripplanner-${BACKEND}-${STAGE}" >> $GITHUB_ENV
-        echo "HOSTING_DIR=${HOSTING}/${BACKEND}/${STAGE}/src" >> $GITHUB_ENV
-        echo "LOG_DIR=${HOSTING}/${BACKEND}/${STAGE}/logs" >> $GITHUB_ENV
+      - name: Set environment for service name and hosting folder
+        run: |
+          echo "SERVICE_NAME=tripplanner-${BACKEND}-${STAGE}" >> $GITHUB_ENV
+          echo "HOSTING_DIR=${HOSTING}/${BACKEND}/${STAGE}/src" >> $GITHUB_ENV
+          echo "LOG_DIR=${HOSTING}/${BACKEND}/${STAGE}/logs" >> $GITHUB_ENV
 
-    - name: Set up Python
-      uses: kishaningithub/setup-python-amazon-linux@v1 # Github does not support setup-python on anything other than #Ubuntu
-      with:
-        python-version: '3.10'  # Specify the Python version you need
+      - name: Set up Python
+        # uses: kishaningithub/setup-python-amazon-linux@v1 # Github does not support setup-python on anything other
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10" # Specify the Python version you need
 
-    - name: Install pip
-      run: python -m pip install --upgrade pip
+      - name: Install pip
+        run: python -m pip install --upgrade pip
 
-    - name: Clean hosting folder & create log directory (if dne)
-      run: |
-        rm -rf $HOSTING_DIR
-        mkdir -p $HOSTING_DIR
-        mkdir -p $LOG_DIR
+      - name: Clean hosting folder & create log directory (if dne)
+        run: |
+          rm -rf $HOSTING_DIR
+          mkdir -p $HOSTING_DIR
+          mkdir -p $LOG_DIR
 
-    - name: Move files to hosting folder and service files to /etc/systemd/system
-      run: |
-        cp -r ./* $HOSTING_DIR
-        sudo rm -f /etc/systemd/system/$SERVICE_NAME.service
-        sudo cp .github/workflows/$SERVICE_NAME.service /etc/systemd/system/
+      - name: Move files to hosting folder and service files to /etc/systemd/system
+        run: |
+          cp -r ./* $HOSTING_DIR
+          sudo rm -f /etc/systemd/system/$SERVICE_NAME.service
+          sudo cp .github/workflows/$SERVICE_NAME.service /etc/systemd/system/
 
-    - name: Create virtual env and install requirements in hosting folder
-      run: |
-        cd $HOSTING_DIR
-        python -m venv venv
-        source venv/bin/activate
-        pip install -r requirements.txt
-        pip install gunicorn
-    
-    - name: Setup .env file
-      run: |
-        cd $HOSTING_DIR/
-        echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
+      - name: Create virtual env and install requirements in hosting folder
+        run: |
+          cd $HOSTING_DIR
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+          pip install gunicorn
 
-    - name: Run unit tests
-      run: |
-        cd $HOSTING_DIR/
-        source venv/bin/activate
-        python -m unittest
+      - name: Setup .env file
+        run: |
+          cd $HOSTING_DIR/
+          echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
 
-    - name: Reload/start WSGI service
-      run: |
-        sudo systemctl daemon-reload
-        sudo systemctl stop $SERVICE_NAME
-        sudo systemctl start $SERVICE_NAME
-        sudo systemctl enable $SERVICE_NAME
+      - name: Run unit tests
+        run: |
+          cd $HOSTING_DIR/
+          source venv/bin/activate
+          python -m unittest
 
-    - name: Verify service is running
-      run: |
-        sleep 10
-        curl -f http://0.0.0.0:$PORT || 
-        (echo "::error::Itinerary backend service encounters an error, check below log to see what went wrong" &&
-          journalctl -u $SERVICE_NAME -n 50 &&
-          exit 1)
+      - name: Reload/start WSGI service
+        run: |
+          sudo systemctl daemon-reload
+          sudo systemctl stop $SERVICE_NAME
+          sudo systemctl start $SERVICE_NAME
+          sudo systemctl enable $SERVICE_NAME
+
+      - name: Verify service is running
+        run: |
+          sleep 10
+          curl -f http://0.0.0.0:$PORT || 
+          (echo "::error::Itinerary backend service encounters an error, check below log to see what went wrong" &&
+            journalctl -u $SERVICE_NAME -n 50 &&
+            exit 1)

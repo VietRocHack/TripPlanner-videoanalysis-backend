@@ -10,7 +10,7 @@ on:
 
 env:
   BACKEND: videoanalysis
-  HOSTING: /home/ec2-user/tripplanner-backend
+  HOSTING: /home/ubuntu/tripplanner-backend
 
 jobs:
   deploy:

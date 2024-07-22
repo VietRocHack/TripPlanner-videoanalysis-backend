@@ -38,7 +38,7 @@ jobs:
           echo "LOG_DIR=${HOSTING}/${BACKEND}/${STAGE}/logs" >> $GITHUB_ENV
 
       - name: Set up Python
-        # uses: kishaningithub/setup-python-amazon-linux@v1 # Github does not support setup-python on anything other
+        # uses: kishaningithub/setup-python-amazon-linux@v1 # Github does not support setup-python on anything other than #Ubuntu
         uses: actions/setup-python@v5
         with:
           python-version: "3.10" # Specify the Python version you need

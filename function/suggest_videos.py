@@ -50,11 +50,12 @@ def suggest(query: str, num_videos: int) -> tuple[bool, dict[str, str]]:
 				vid_count += 1
 
 	except Exception as e:
-		logger.info(f"An error has happened when fetching links: {e}")
+		logger.info(f"An error has happened when fetching links from https://www.tiktok.com/discover/{cleaned_query}: {e}")
 		driver.quit()
 		return False, {"error": "An error has happened"}
 	finally:
 		driver.quit()
+		logger.info(f"Accessed https://www.tiktok.com/discover/{cleaned_query} to find: {matching_links}")
 		return True, {"result": matching_links}
 
 # load_dotenv()

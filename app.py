@@ -1,6 +1,5 @@
 import time
 from flask import Flask, jsonify, request
-from openai import OpenAI
 from dotenv import load_dotenv
 from function import analyze_videos
 import asyncio
@@ -10,7 +9,6 @@ load_dotenv()
 
 app = Flask(__name__)
 
-client = OpenAI()
 model = "gpt-3.5-turbo"
 
 @app.route("/")

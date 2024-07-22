@@ -17,8 +17,6 @@ class SuggestVideosUnitTest(unittest.TestCase):
 
 		result, response = suggest_videos.suggest(location, num_videos)
 
-		print(response)
-
 		self.assertTrue(result)
 		suggested_videos = response["result"]
 		self.assertEqual(len(suggested_videos), num_videos)

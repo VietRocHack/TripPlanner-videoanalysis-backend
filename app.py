@@ -1,7 +1,7 @@
 import time
 from flask import Flask, jsonify, request
 from dotenv import load_dotenv
-from function import analyze_videos
+from function import analyze_videos, suggest_videos
 import asyncio
 
 
@@ -15,8 +15,8 @@ model = "gpt-3.5-turbo"
 def index():
 	return "Hello world"
 
-@app.route("/analyze_videos", methods=['POST'])
-def generate_itinerary():
+@app.route("/analyze_videos", methods=["POST"])
+def analyze_videos_http():
 	if not request.is_json:
 		return jsonify({"error": "Bad request"}), 400
 
@@ -48,6 +48,22 @@ def generate_itinerary():
 
 	return jsonify(response_packet), 200
 	
+@app.route("/suggest_videos", methods=["GET"])
+def suggest_videos_http():
+	args_location = request.args.get("location", "")
+	num_videos = request.args.get("num_videos", 5)
+
+	if args_location == "":
+		return jsonify({"error": "Bad request"}), 400
+
+	result, content = suggest_videos.suggest(args_location, int(num_videos))
+
+	# check if suggest videos succeed
+	if result:
+		return jsonify({"result": content["result"]}), 200
+	else:
+		return jsonify(content), 500
+
 
 
 if __name__ == "__main__":

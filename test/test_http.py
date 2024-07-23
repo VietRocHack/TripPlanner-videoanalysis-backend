@@ -3,7 +3,7 @@ from app import app
 from function import utils
 from . import helper
 import json
-from urllib.parse import urlparse
+from urllib.parse import urlencode
 
 class HttpTest(unittest.TestCase):
 		def setUp(self):
@@ -62,13 +62,12 @@ class HttpTest(unittest.TestCase):
 			self.assertEqual(metadata_request, request)
 
 		def test_suggest_videos(self):
-			test_query = "Rochester, NY, US"
 			num_videos = 5
-
-			response = self.app.get("""/suggest_videos?"""
-													 f"""query={urlparse(test_query)}"""
-													 f"""&num_videos={num_videos}"""
-													 )
+			params = {
+				"location": "Rochester, NY",
+				"num_videos": num_videos
+			}
+			response = self.app.get(f"/suggest_videos?{urlencode(params)}")
 			
 			self.assertEqual(response.status_code, 200)
 			self.assertTrue(response.is_json)
@@ -79,6 +78,7 @@ class HttpTest(unittest.TestCase):
 
 			# check for resulting links
 			suggested_videos = response_data["result"]
+			print(suggested_videos)
 			self.assertEqual(len(suggested_videos), num_videos)
 
 			for video in suggested_videos:

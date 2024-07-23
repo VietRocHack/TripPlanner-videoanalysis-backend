@@ -18,9 +18,9 @@ options.add_argument("--enable-automation")
 options.add_argument("--disable-infobars")
 options.add_argument("--disable-dev-shm-usage")
 
-logger = utils.setup_logger(__name__, f"../logs/analyze_videos_logger_{int(time.time())}.log")
+logger = utils.setup_logger(__name__, f"../logs/suggest_videos_logger_{int(time.time())}.log")
 
-def suggest(query: str, num_videos: int) -> tuple[bool, dict[str, str]]:
+def suggest(query: str, num_videos: int = 5) -> tuple[bool, dict[str, str]]:
 	# Replace all types of whitespace with a single space
 	cleaned_query = re.sub(r"\s+", "-", query)
 	# Remove all non-alphabetic characters
@@ -34,29 +34,28 @@ def suggest(query: str, num_videos: int) -> tuple[bool, dict[str, str]]:
 
 	try:
 		element_present = EC.presence_of_element_located((By.ID, 'bottom'))
-		WebDriverWait(driver, 20).until(element_present)
+		WebDriverWait(driver, 10).until(element_present)
 
 		# Filter <a> tags with href attributes that match the regex pattern
 		a_tags = driver.find_elements(By.TAG_NAME, 'a')
 		vid_count = 0
 
 		for a_tag in a_tags:
-			if vid_count == num_videos:
-				break
 			href = a_tag.get_attribute('href')
 			# Find all links with path /@<user>/video/<video_id>
-			if href and re.search(r'/@[^/]+/video/\d+', href):
+			if href and "/video/" in href:
 				matching_links.append(href)
 				vid_count += 1
-
+				if vid_count >= num_videos:
+					break
+		logger.info(f"Accessed https://www.tiktok.com/discover/{cleaned_query} to find: {matching_links}")
+		return True, {"result": matching_links}
+		
 	except Exception as e:
 		logger.info(f"An error has happened when fetching links from https://www.tiktok.com/discover/{cleaned_query}: {e}")
-		driver.quit()
 		return False, {"error": "An error has happened"}
 	finally:
 		driver.quit()
-		logger.info(f"Accessed https://www.tiktok.com/discover/{cleaned_query} to find: {matching_links}")
-		return True, {"result": matching_links}
 
 # load_dotenv()
 

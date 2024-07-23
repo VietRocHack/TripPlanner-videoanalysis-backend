@@ -56,7 +56,7 @@ def suggest_videos_http():
 	if args_location == "":
 		return jsonify({"error": "Bad request"}), 400
 
-	result, content = suggest_videos.suggest(args_location, int(num_videos))
+	result, content = suggest_videos.suggest_by_location(args_location, int(num_videos))
 
 	# check if suggest videos succeed
 	if result:

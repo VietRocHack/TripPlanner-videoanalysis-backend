@@ -25,20 +25,23 @@ options.add_argument("--disable-dev-shm-usage")
 
 logger = utils.setup_logger(__name__, f"../logs/suggest_videos_logger_{int(time.time())}.log")
 
-def suggest(query: str, num_videos: int = 5) -> tuple[bool, dict[str, str]]:
+def suggest_by_location(location: str, num_videos: int = 5) -> tuple[bool, dict[str, str]]:
 	# Check if queries are hardcoded
-	hardcoded_links = check_hardcoded(query)
+	hardcoded_links = check_hardcoded(location)
 	if hardcoded_links:
 		return True, {"result": sample(hardcoded_links, num_videos)}
 
+	city = location.split(',')[0].strip()
+
 	# Replace all types of whitespace with a single space
-	cleaned_query = re.sub(r"\s+", "-", query)
+	cleaned_query = re.sub(r"\s+", "-", city)
 	# Remove all non-alphabetic characters
 	cleaned_query = re.sub(r"[^a-zA-Z-]", "", cleaned_query).lower()
 
 	driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-	logger.info(f"Accessing https://www.tiktok.com/discover/{cleaned_query}")
-	driver.get(f"https://www.tiktok.com/discover/{cleaned_query}")
+	url = f"https://www.tiktok.com/discover/travel-{cleaned_query}"
+	logger.info(f"Accessing {url}")
+	driver.get(url)
 
 	matching_links = []
 
@@ -58,11 +61,11 @@ def suggest(query: str, num_videos: int = 5) -> tuple[bool, dict[str, str]]:
 				vid_count += 1
 				if vid_count >= num_videos:
 					break
-		logger.info(f"Accessed https://www.tiktok.com/discover/{cleaned_query} to find: {matching_links}")
+		logger.info(f"Accessed {url} to find: {matching_links}")
 		return True, {"result": matching_links}
 		
 	except Exception as e:
-		logger.info(f"An error has happened when fetching links from https://www.tiktok.com/discover/{cleaned_query}: {e}")
+		logger.info(f"An error has happened when fetching links from {url}: {e}")
 		return False, {"error": "An error has happened"}
 	finally:
 		driver.quit()

@@ -12,10 +12,10 @@ class SuggestVideosUnitTest(unittest.TestCase):
 		self.assertRegex(response["access_token"], r'^clt\..+$')
 
 	def test_suggest_random_video_by_location(self):
-		location = "New York, NY"
+		location = "Hanoi, Vietnam"
 		num_videos = 5
 
-		result, response = suggest_videos.suggest(location, num_videos)
+		result, response = suggest_videos.suggest_by_location(location, num_videos)
 
 		self.assertTrue(result)
 		suggested_videos = response["result"]
@@ -30,7 +30,7 @@ class SuggestVideosUnitTest(unittest.TestCase):
 		# loads than waiting it all out which is too long
 		location = "Some random location I don't know"
 
-		result, response = suggest_videos.suggest(location)
+		result, response = suggest_videos.suggest_by_location(location)
 
 		self.assertFalse(result)
 		self.assertIn("error", response)
@@ -49,7 +49,7 @@ class SuggestVideosUnitTest(unittest.TestCase):
 			result = suggest_videos.check_hardcoded(location)
 			self.assertIsNotNone(result)
 
-			result, response = suggest_videos.suggest(location)
+			result, response = suggest_videos.suggest_by_location(location)
 			self.assertTrue(result)
 			suggested_videos = response["result"]
 			self.assertEqual(len(suggested_videos), num_videos)

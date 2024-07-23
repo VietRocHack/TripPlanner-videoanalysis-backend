@@ -1,7 +1,9 @@
 import unittest
 from app import app
+from function import utils
 from . import helper
 import json
+from urllib.parse import urlparse
 
 class HttpTest(unittest.TestCase):
 		def setUp(self):
@@ -58,6 +60,30 @@ class HttpTest(unittest.TestCase):
 
 			metadata_request = metadata["request"]
 			self.assertEqual(metadata_request, request)
+
+		def test_suggest_videos(self):
+			test_query = "Rochester, NY, US"
+			num_videos = 5
+
+			response = self.app.get("""/suggest_videos?"""
+													 f"""query={urlparse(test_query)}"""
+													 f"""&num_videos={num_videos}"""
+													 )
+			
+			self.assertEqual(response.status_code, 200)
+			self.assertTrue(response.is_json)
+
+			# check for all fields
+			response_data = response.get_json()
+			self.assertIn("result", response_data)
+
+			# check for resulting links
+			suggested_videos = response_data["result"]
+			self.assertEqual(len(suggested_videos), num_videos)
+
+			for video in suggested_videos:
+				is_valid_url, msg, _ = utils.verify_tiktok_url(video)
+				self.assertTrue(is_valid_url, msg)
 
 if __name__ == "__main__":
 		unittest.main()

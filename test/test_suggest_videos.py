@@ -36,5 +36,29 @@ class SuggestVideosUnitTest(unittest.TestCase):
 		self.assertIn("error", response)
 		self.assertEqual(response["error"], "An error has happened")
 
+	def test_hardcoded_links(self):
+		# Check only for supported locations
+		supported_locations = [
+			"New York, NY, USA",
+			"Paris, France",
+			"London, England",
+			"Los Angeles, CA, USA"
+		]
+		num_videos = 5
+		for location in supported_locations:
+			result = suggest_videos.check_hardcoded(location)
+			self.assertIsNotNone(result)
+
+			result, response = suggest_videos.suggest(location)
+			self.assertTrue(result)
+			suggested_videos = response["result"]
+			self.assertEqual(len(suggested_videos), num_videos)
+
+		# Check for other non-supported ones
+		other_locations = ["Ho Chi Minh City, Vietnam"]
+		for location in other_locations:
+			result = suggest_videos.check_hardcoded(location)
+			self.assertIsNone(result)
+
 if __name__ == '__main__':
 	unittest.main()

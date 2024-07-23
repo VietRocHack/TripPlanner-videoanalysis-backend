@@ -78,7 +78,6 @@ class HttpTest(unittest.TestCase):
 
 			# check for resulting links
 			suggested_videos = response_data["result"]
-			print(suggested_videos)
 			self.assertEqual(len(suggested_videos), num_videos)
 
 			for video in suggested_videos:

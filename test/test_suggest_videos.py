@@ -25,5 +25,14 @@ class SuggestVideosUnitTest(unittest.TestCase):
 			is_valid_url, msg, _ = utils.verify_tiktok_url(video)
 			self.assertTrue(is_valid_url, msg)
 
+	def test_detect_bad_location(self):
+		location = "Some random location I don't know"
+
+		result, response = suggest_videos.suggest(location)
+
+		self.assertFalse(result)
+		self.assertIn("error", response)
+		self.assertEqual(response["error"], "No links found for given query")
+
 if __name__ == '__main__':
 	unittest.main()

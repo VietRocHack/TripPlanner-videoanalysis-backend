@@ -12,7 +12,7 @@ class SuggestVideosUnitTest(unittest.TestCase):
 		self.assertRegex(response["access_token"], r'^clt\..+$')
 
 	def test_suggest_random_video_by_location(self):
-		location = "Hanoi, Vietnam"
+		location = "St. Louis, MO, USA"
 		num_videos = 5
 
 		result, response = suggest_videos.suggest_by_location(location, num_videos)
@@ -42,7 +42,10 @@ class SuggestVideosUnitTest(unittest.TestCase):
 			"New York, NY, USA",
 			"Paris, France",
 			"London, England",
-			"Los Angeles, CA, USA"
+			"Los Angeles, CA, USA",
+			"Rochester, NY, USA",
+			"Ho Chi Minh, Ho Chi Minh City, Vietnam",
+			"Hanoi, Vietnam"
 		]
 		num_videos = 5
 		for location in supported_locations:

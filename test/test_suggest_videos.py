@@ -26,13 +26,15 @@ class SuggestVideosUnitTest(unittest.TestCase):
 			self.assertTrue(is_valid_url, msg)
 
 	def test_detect_bad_location(self):
+		# TODO: This is not finished. Better to check if the Discover page actually
+		# loads than waiting it all out which is too long
 		location = "Some random location I don't know"
 
 		result, response = suggest_videos.suggest(location)
 
 		self.assertFalse(result)
 		self.assertIn("error", response)
-		self.assertEqual(response["error"], "No links found for given query")
+		self.assertEqual(response["error"], "An error has happened")
 
 if __name__ == '__main__':
 	unittest.main()

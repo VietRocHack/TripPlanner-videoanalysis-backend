@@ -58,7 +58,7 @@ class SuggestVideosUnitTest(unittest.TestCase):
 			self.assertEqual(len(suggested_videos), num_videos)
 
 		# Check for other non-supported ones
-		other_locations = ["Ho Chi Minh City, Vietnam"]
+		other_locations = ["City, Country"]
 		for location in other_locations:
 			result = suggest_videos.check_hardcoded(location)
 			self.assertIsNone(result)

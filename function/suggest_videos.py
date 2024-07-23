@@ -72,7 +72,7 @@ def suggest_by_location(location: str, num_videos: int = 5) -> tuple[bool, dict[
 
 def check_hardcoded(query: str) -> list[str] | None:
 	for hardcoded in hardcoded_links:
-		if hardcoded in query.lower():
+		if hardcoded.lower() in query.lower():
 			return hardcoded_links[hardcoded]
 		
 	return None

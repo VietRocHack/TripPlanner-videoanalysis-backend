@@ -1,6 +1,7 @@
 import logging
 from logging.handlers import RotatingFileHandler
 import os
+from urllib.parse import urlparse
 
 def setup_logger(name, filename, level=logging.DEBUG):
 	# Ensure the logs directory exists
@@ -21,3 +22,13 @@ def setup_logger(name, filename, level=logging.DEBUG):
 	logger.addHandler(handler)
 
 	return logger
+
+def verify_tiktok_url(video_url: str) -> tuple[bool, str, list[str]]:
+	parsed_url = urlparse(video_url)
+	if "tiktok.com" not in parsed_url.hostname:
+		return False, "Invalid TikTok URL - provided URL is not from TikTok", None
+	paths = parsed_url.path.split("/")
+	if len(paths) < 4:
+		return False, "Invalid TikTok URL - bad format", None
+
+	return True, None, paths

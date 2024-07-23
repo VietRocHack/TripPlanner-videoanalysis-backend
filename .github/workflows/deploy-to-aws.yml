@@ -71,6 +71,20 @@ jobs:
           cd $HOSTING_DIR/
           echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
 
+      - name: Check and Install Google Chrome
+        run: |
+          if ! command -v google-chrome &> /dev/null
+          then
+            echo "Google Chrome not found. Installing..."
+            wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+            sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
+            sudo apt update
+            sudo apt install google-chrome-stable -y
+            echo "Google Chrome has been installed."
+          else
+            echo "Google Chrome is already installed."
+          fi
+
       - name: Run unit tests
         run: |
           cd $HOSTING_DIR/

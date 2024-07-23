@@ -1,4 +1,6 @@
+import json
 import re
+from random import sample
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
@@ -9,6 +11,9 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 from function import utils
 import time
+
+with open("./function/suggest_videos_hardcode.json") as f:
+	hardcoded_links = json.load(f)
 
 options = Options()
 options.add_argument("--headless")
@@ -21,10 +26,15 @@ options.add_argument("--disable-dev-shm-usage")
 logger = utils.setup_logger(__name__, f"../logs/suggest_videos_logger_{int(time.time())}.log")
 
 def suggest(query: str, num_videos: int = 5) -> tuple[bool, dict[str, str]]:
+	# Check if queries are hardcoded
+	hardcoded_links = check_hardcoded(query)
+	if hardcoded_links:
+		return True, {"result": sample(hardcoded_links, num_videos)}
+
 	# Replace all types of whitespace with a single space
 	cleaned_query = re.sub(r"\s+", "-", query)
 	# Remove all non-alphabetic characters
-	cleaned_query = re.sub(r"[^a-zA-Z-]", "", cleaned_query)
+	cleaned_query = re.sub(r"[^a-zA-Z-]", "", cleaned_query).lower()
 
 	driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 	logger.info(f"Accessing https://www.tiktok.com/discover/{cleaned_query}")
@@ -34,7 +44,7 @@ def suggest(query: str, num_videos: int = 5) -> tuple[bool, dict[str, str]]:
 
 	try:
 		element_present = EC.presence_of_element_located((By.ID, 'bottom'))
-		WebDriverWait(driver, 10).until(element_present)
+		WebDriverWait(driver, 5).until(element_present)
 
 		# Filter <a> tags with href attributes that match the regex pattern
 		a_tags = driver.find_elements(By.TAG_NAME, 'a')
@@ -56,6 +66,13 @@ def suggest(query: str, num_videos: int = 5) -> tuple[bool, dict[str, str]]:
 		return False, {"error": "An error has happened"}
 	finally:
 		driver.quit()
+
+def check_hardcoded(query: str) -> list[str] | None:
+	for hardcoded in hardcoded_links:
+		if hardcoded in query.lower():
+			return hardcoded_links[hardcoded]
+		
+	return None
 
 # load_dotenv()
 

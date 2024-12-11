@@ -88,15 +88,13 @@ async def analyze_from_url(
 		videos.
 	"""
 	# Checking for validity of url
-	parsed_url = urlparse(video_url)
-	if "tiktok.com" not in parsed_url.hostname:
-		logger.info(f"Invalid TikTok URL - bad hostname: { video_url }")
-		return False, {"error": "One or more video URLs are not from TikTok."}
-	paths = parsed_url.path.split("/")
-	if len(paths) < 4:
-		logger.info(f"Invalid TikTok URL - bad format: { video_url }")
-		return False, {"error": "Invalid TikTok video URL."}
+	is_valid_url, msg, paths = utils.verify_tiktok_url(video_url)
 
+	if not is_valid_url:
+		logger.info(f"{msg}: { video_url }")
+		return False, {"error": msg}
+
+	# If it's good, then we continue
 	vid_obj = _TikTokVideoObject(id=paths[3], user=paths[1])
 	
 	# Flag to switch to using video
